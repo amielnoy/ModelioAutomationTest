@@ -161,6 +161,13 @@ The pipeline is split into five jobs to maximise concurrency and apply least-pri
 | `workflows` fixture instantiated on every UI test but never used | Removed; `AuthWorkflow` / `CartWorkflow` / `CheckoutWorkflow` are available for future higher-level test composition |
 | Hardcoded `10_000` timeout in `auth.ts` `waitForURL` | Replaced with `config.playwright.defaultTimeout` |
 | `ApiService` missing `patch()` | Added; now fully mirrors `ApiClient`'s HTTP verb surface |
+| Health tests hard-failed when FastAPI not running | `test.beforeAll` probes the service once; `test.beforeEach` skips the suite with a clear message if unreachable — no false failures on developer machines |
+| Health API required manual start on bare/Windows machines | `webServer` block in `playwright.config.ts` auto-starts uvicorn if port 8000 is free; `reuseExistingServer: true` is a no-op when Docker or CI already has it up |
+| Docker rebuild required after every source edit | `docker-compose.yml` mounts `src/`, `tests/`, `playwright.config.ts`, `config.json`, `tsconfig.json` as read-only volumes — changes are live on the next container run without a rebuild |
+| `allueBug` typo in exported API | Renamed to `allureBug`; all call sites updated |
+| `attachRequestResponse()` defined locally in `posts.spec.ts` | Extracted to `tests/api/helpers.ts`; available to all current and future API spec files |
+| Non-null assertions `params.expectedUrl!` / `params.expectedError!` | Replaced with null-coalescing fallbacks so a malformed JSON fixture row produces a clear assertion failure instead of a runtime crash |
+| Data-driven spec status assertion used a ternary mapping | Replaced with direct `params.expectedStatus` comparison — no silent mismatch if a future row adds a non-200/404 status |
 
 ---
 

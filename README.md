@@ -1,6 +1,6 @@
 # ModelioAutomationTest
 
-Production-grade Playwright + TypeScript automation framework covering **UI** (SauceDemo), **REST API** (JSONPlaceholder), and a **FastAPI health service** that monitors both. 25 tests run fully in parallel across four Playwright projects and are reported in Allure 3, deployed to GitHub Pages on every push to `main`.
+Production-grade Playwright + TypeScript automation framework covering **UI** (SauceDemo), **REST API** (JSONPlaceholder), and a **FastAPI health service** that monitors both. 30 tests run fully in parallel across four Playwright projects and are reported in Allure 3, deployed to GitHub Pages on every push to `main`.
 
 **Live Allure report →** https://amielnoy.github.io/ModelioAutomationTest/
 
@@ -57,20 +57,20 @@ No secrets are required — SauceDemo credentials are publicly listed on its log
 ```bash
 npm test                      # all tests (UI + API + health), 4 workers
 npm run test:ui               # UI tests only (Chromium)
-npm run test:api              # API tests only (JSONPlaceholder — 6 tests)
+npm run test:api              # API tests only (JSONPlaceholder — 11 tests)
 npm run test:headed           # headed browser (debug mode)
 npm run test:parallel         # explicit --workers=4
 
 npm run typecheck             # tsc --noEmit
 ```
 
-> **Note:** `npm test` includes the `health` project which requires the FastAPI service at `localhost:8000`. Without it the 5 health tests will fail. Either start it first (`./run.sh api`) or skip those tests with `npx playwright test --ignore-glob '**/health*'`.
+> **Health tests:** `npm test` includes the `health` project (5 tests against `localhost:8000`). Playwright's `webServer` block auto-starts uvicorn if the port is free, so Python 3.12 is the only prerequisite. If Python is unavailable, the health tests are **skipped gracefully** with a clear message — they never hard-fail on a machine that can't run the health API.
 
 ### Run by tag
 
 ```bash
 npx playwright test --grep "@ui"            # 14 UI tests (login, cart, checkout, sorting, data-driven)
-npx playwright test --grep "@api"           # 6 API tests (JSONPlaceholder CRUD)
+npx playwright test --grep "@api"           # 11 API tests (JSONPlaceholder CRUD + data-driven)
 npx playwright test --grep "@health-check"  # 5 health tests (FastAPI endpoints + OpenAPI)
 ```
 
@@ -84,9 +84,11 @@ npx playwright test --grep "@health-check"  # 5 health tests (FastAPI endpoints 
 ./run.sh clean      # tear down containers and remove report artifacts
 ```
 
-Grafana dashboard → http://localhost:3000  
+Grafana dashboard → http://localhost:3000 (user: `admin` / password: `admin`)  
 Swagger UI → http://localhost:8000/docs  
 Prometheus → http://localhost:9090
+
+> **Live reload:** `docker-compose.yml` mounts `src/`, `tests/`, `playwright.config.ts`, `config.json`, and `tsconfig.json` as read-only volumes into the test container. Local code changes take effect on the next `docker compose run tests` without rebuilding the image.
 
 ---
 
@@ -148,9 +150,10 @@ push
 │   │   ├── cart.spec.ts           # add items, badge count
 │   │   └── checkout.spec.ts       # end-to-end + price sorting
 │   └── api/
+│       ├── helpers.ts             # shared attachRequestResponse() for API specs
 │       ├── posts.spec.ts          # CRUD on /posts (JSONPlaceholder)
 │       ├── posts.data.spec.ts     # data-driven GET /posts/{id} (JSON params)
-│       └── health.spec.ts         # FastAPI health endpoints + OpenAPI spec
+│       └── health.spec.ts         # FastAPI health endpoints + OpenAPI spec (auto-skip if service down)
 │
 ├── src/
 │   ├── pages/                # Page Object Model (BasePage, LoginPage, InventoryPage, …)
