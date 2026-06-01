@@ -1,18 +1,18 @@
 import { config } from './config';
 
 export default async function globalSetup(): Promise<void> {
-  const swaggerUrl    = `${config.health.apiUrl}/docs`;
-  const fastApiUrl    = config.health.apiUrl;
-  const grafanaUrl    = config.health.grafanaUrl;
-  const allureUrl     = config.health.allureReportUrl;
-
   const line = '─'.repeat(56);
   console.log(`\n${line}`);
   console.log('  Server links');
   console.log(line);
-  console.log(`  Swagger UI   ${swaggerUrl}`);
-  console.log(`  FastAPI      ${fastApiUrl}`);
-  console.log(`  Grafana      ${grafanaUrl}`);
-  console.log(`  Allure       ${allureUrl}`);
+  console.log(`  Allure       ${config.health.allureReportUrl}`);
+
+  if (!process.env.CI) {
+    // Local Docker services — not reachable from CI or GitHub Pages
+    console.log(`  Swagger UI   ${config.health.apiUrl}/docs`);
+    console.log(`  FastAPI      ${config.health.apiUrl}`);
+    console.log(`  Grafana      ${config.health.grafanaUrl}`);
+  }
+
   console.log(`${line}\n`);
 }

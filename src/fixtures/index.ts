@@ -143,13 +143,16 @@ export const test = base.extend<AppFixtures>({
   },
 
   // ── Server links (auto) ─────────────────────────────────────────────────
-  // Adds clickable links to Swagger, FastAPI, Grafana, and the Allure report
-  // in every test result on the Allure report overview page.
+  // Always adds the public Allure report link. Local service links (Swagger,
+  // FastAPI, Grafana) are only added when not running in CI, because those
+  // services run via Docker locally and are unreachable from GitHub Pages.
   _serverLinks: [async ({}, use) => {
-    await allureLink(`${config.health.apiUrl}/docs`, 'Swagger UI', 'tms');
-    await allureLink(config.health.apiUrl,           'FastAPI',    'tms');
-    await allureLink(config.health.grafanaUrl,        'Grafana',    'tms');
-    await allureLink(config.health.allureReportUrl,  'Allure',     'tms');
+    await allureLink(config.health.allureReportUrl, 'Allure Report', 'tms');
+    if (!process.env.CI) {
+      await allureLink(`${config.health.apiUrl}/docs`, 'Swagger UI', 'tms');
+      await allureLink(config.health.apiUrl,           'FastAPI',    'tms');
+      await allureLink(config.health.grafanaUrl,       'Grafana',    'tms');
+    }
     await use(undefined as unknown as void);
   }, { auto: true }],
 
