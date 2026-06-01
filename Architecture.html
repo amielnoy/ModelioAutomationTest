@@ -599,7 +599,7 @@
 │   │   └── <span class="file">prometheus.yml</span>
 │   └── <span class="dir">dashboards/</span>
 │       ├── <span class="file">dashboards.yml</span>
-│       └── <span class="file">health.json</span>          <span class="note">← 4-panel dashboard</span>
+│       └── <span class="file">health.json</span>          <span class="note">← 11-panel dashboard</span>
 │
 ├── <span class="dir">.github/workflows/</span>
 │   └── <span class="file">tests.yml</span>            <span class="note">← CI pipeline</span>
@@ -710,6 +710,86 @@
 
   <!-- ── CI/CD ── -->
   <h2 id="ci">CI / CD Pipeline</h2>
+
+  <div class="arch-svg-wrap">
+    <svg viewBox="0 0 840 450" xmlns="http://www.w3.org/2000/svg"
+         font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
+      <defs>
+        <marker id="ci-ah" viewBox="0 0 10 10" refX="8" refY="5"
+                markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M0,1 L8,5 L0,9 Z" fill="#484f58"/>
+        </marker>
+      </defs>
+
+      <!-- ═══ TRIGGER ═══ -->
+      <rect x="5" y="5" width="830" height="42" rx="8" fill="#161b22" stroke="#484f58" stroke-width="1.5"/>
+      <text x="420" y="19" text-anchor="middle" fill="#484f58" font-size="9" font-weight="700" letter-spacing="0.08em">TRIGGER</text>
+      <text x="420" y="36" text-anchor="middle" fill="#f0f6fc" font-size="12" font-weight="600">on: push / pull_request → main  ·  ubuntu-latest  ·  timeout: 30 min</text>
+
+      <!-- arrow trigger → test job -->
+      <line x1="420" y1="47" x2="420" y2="62" stroke="#484f58" stroke-width="1.5" marker-end="url(#ci-ah)"/>
+
+      <!-- ═══ JOB: test ═══ -->
+      <rect x="5" y="62" width="830" height="300" rx="8" fill="#0d1a12" stroke="#3fb950" stroke-width="1.5"/>
+      <text x="16" y="79" fill="#3fb950" font-size="10" font-weight="700" letter-spacing="0.05em">JOB: test</text>
+      <line x1="15" y1="85" x2="825" y2="85" stroke="#3fb95030" stroke-width="1"/>
+
+      <!-- ─── Sub-col 1: Setup (amber) x=14 w=248 ─── -->
+      <rect x="14" y="93" width="248" height="185" rx="6" fill="#26200c" stroke="#d2992250" stroke-width="1"/>
+      <text x="138" y="109" text-anchor="middle" fill="#d29922" font-size="9.5" font-weight="700">① Setup &amp; Services</text>
+      <line x1="24" y1="114" x2="252" y2="114" stroke="#d2992230" stroke-width="0.8"/>
+      <text x="24" y="129" fill="#8b949e" font-size="9">actions/checkout@v4</text>
+      <text x="24" y="145" fill="#8b949e" font-size="9">setup-node(20)  ·  npm ci</text>
+      <text x="24" y="161" fill="#8b949e" font-size="9">setup-java(17)  <tspan fill="#484f58" font-size="8">← Allure JRE</tspan></text>
+      <text x="24" y="177" fill="#8b949e" font-size="9">setup-python(3.12)  ·  pip install</text>
+      <text x="24" y="193" fill="#8b949e" font-size="9">uvicorn health_api.main:app :8000 &amp;</text>
+      <text x="24" y="209" fill="#8b949e" font-size="9">wait for /health/self</text>
+      <text x="24" y="225" fill="#484f58" font-size="8.5">tsc --noEmit  ·  playwright install</text>
+      <text x="24" y="268" fill="#3fb95066" font-size="8">chromium + system deps</text>
+
+      <!-- ─── Sub-col 2: Tests (blue) x=272 w=268 ─── -->
+      <rect x="272" y="93" width="268" height="185" rx="6" fill="#0d1e38" stroke="#58a6ff50" stroke-width="1"/>
+      <text x="406" y="109" text-anchor="middle" fill="#58a6ff" font-size="9.5" font-weight="700">② Run Tests</text>
+      <line x1="282" y1="114" x2="530" y2="114" stroke="#58a6ff30" stroke-width="0.8"/>
+      <text x="282" y="129" fill="#8b949e" font-size="9">playwright test --workers=4</text>
+      <text x="282" y="145" fill="#484f58" font-size="8.5">  continue-on-error: true</text>
+      <text x="282" y="163" fill="#8b949e" font-size="9">download prev allure-report artifact</text>
+      <text x="282" y="179" fill="#484f58" font-size="8.5">  (history/ for trend graph)</text>
+      <text x="282" y="197" fill="#8b949e" font-size="9">copy history/ → allure-results/</text>
+      <text x="282" y="215" fill="#8b949e" font-size="9">allure generate → allure-report/</text>
+      <text x="282" y="231" fill="#484f58" font-size="8.5">  3 projects: chromium · api · health</text>
+      <text x="282" y="249" fill="#58a6ff66" font-size="8">retries: 2 on CI, 1 local</text>
+
+      <!-- ─── Sub-col 3: Reporting (purple) x=550 w=279 ─── -->
+      <rect x="550" y="93" width="279" height="185" rx="6" fill="#120c20" stroke="#bc8cff50" stroke-width="1"/>
+      <text x="689" y="109" text-anchor="middle" fill="#bc8cff" font-size="9.5" font-weight="700">③ Reporting &amp; Publish</text>
+      <line x1="560" y1="114" x2="819" y2="114" stroke="#bc8cff30" stroke-width="0.8"/>
+      <text x="560" y="129" fill="#8b949e" font-size="9">step summary: results table</text>
+      <text x="560" y="145" fill="#8b949e" font-size="9">step summary: server links</text>
+      <text x="560" y="161" fill="#8b949e" font-size="9">upload: allure-report (artifact)</text>
+      <text x="560" y="177" fill="#8b949e" font-size="9">upload: playwright-report (artifact)</text>
+      <text x="560" y="193" fill="#8b949e" font-size="9">upload: allure-results · test-results</text>
+      <text x="560" y="209" fill="#8b949e" font-size="9">touch .nojekyll  ← prevent Jekyll strip</text>
+      <text x="560" y="225" fill="#8b949e" font-size="9">upload-pages-artifact</text>
+      <text x="560" y="249" fill="#bc8cff66" font-size="8">artifacts retained 7–14 days</text>
+
+      <!-- ─── Check outcomes bar ─── -->
+      <rect x="14" y="288" width="815" height="38" rx="5" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+      <text x="421" y="304" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="700">CHECK TEST OUTCOMES</text>
+      <text x="421" y="319" text-anchor="middle" fill="#484f58" font-size="8.5">exit 1 if any project failed  ·  ✅ all passed → proceed to deploy</text>
+
+      <!-- arrow test → deploy (with condition) -->
+      <line x1="420" y1="362" x2="420" y2="377" stroke="#484f58" stroke-width="1.5" marker-end="url(#ci-ah)"/>
+      <text x="432" y="372" fill="#484f58" font-size="8.5" font-style="italic">if: github.ref == 'refs/heads/main'</text>
+
+      <!-- ═══ JOB: deploy-pages ═══ -->
+      <rect x="5" y="377" width="830" height="48" rx="8" fill="#0c1628" stroke="#58a6ff" stroke-width="1.5"/>
+      <text x="16" y="396" fill="#58a6ff" font-size="10" font-weight="700" letter-spacing="0.05em">JOB: deploy-pages</text>
+      <text x="420" y="396" text-anchor="middle" fill="#f0f6fc" font-size="10" font-weight="500">actions/deploy-pages@v4</text>
+      <text x="420" y="413" text-anchor="middle" fill="#8b949e" font-size="9">→ https://amielnoy.github.io/ModelioAutomationTest/</text>
+    </svg>
+  </div>
+
   <div class="diagram">
 push to main
     │
@@ -781,7 +861,7 @@ push to main
     <div class="card">
       <div class="card-title">Grafana Dashboard</div>
       <div class="card-desc">
-        4 panels: HTTP request rate, p95 response latency, error rate, service uptime.
+        11 panels: test results (total/passed/failed/flaky), run history, service status per SUT, latency, disk usage, error rate, request rate, p95 latency.
         Powered by Prometheus scraping the FastAPI <code>/metrics</code> endpoint.
       </div>
     </div>
