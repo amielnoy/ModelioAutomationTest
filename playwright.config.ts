@@ -118,17 +118,4 @@ export default defineConfig({
 
   // Output directory for traces, screenshots, videos
   outputDir: 'test-results/',
-
-  // Auto-start the FastAPI health service when it is not already running.
-  // reuseExistingServer: true means: if localhost:8000 is already up (Docker on Mac, CI
-  // uvicorn background process), skip the launch command entirely. On a bare Windows
-  // machine with no Docker, this command starts uvicorn automatically.
-  webServer: {
-    command: 'python -m pip install -r health_api/requirements.txt -q && python -m uvicorn health_api.main:app --host 127.0.0.1 --port 8000',
-    url: 'http://127.0.0.1:8000/health/self',
-    reuseExistingServer: true,
-    timeout: 60_000,
-    stdout: 'pipe',
-    stderr: 'pipe',
-  },
 });

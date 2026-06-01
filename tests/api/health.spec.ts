@@ -12,6 +12,28 @@ import {
   allureBug,
 } from '../../src/utils/allure';
 import { JiraLinks } from '../constants';
+import { config } from '../../src/utils/config';
+
+// Check once whether the FastAPI health service is reachable.
+// If not (e.g. Docker not running, no Python on the machine), every test in this
+// file is skipped with a clear message rather than failing or crashing.
+let healthApiAvailable = false;
+
+test.beforeAll(async ({ request }) => {
+  try {
+    const r = await request.get(`${config.health.apiUrl}/health/self`, { timeout: 4_000 });
+    healthApiAvailable = r.ok();
+  } catch {
+    healthApiAvailable = false;
+  }
+});
+
+test.beforeEach(function () {
+  test.skip(
+    !healthApiAvailable,
+    'Health API not reachable — start Docker stack (./run.sh all) or run uvicorn manually',
+  );
+});
 
 test.describe('Health API — /health', { tag: '@health-check' }, () => {
   test('GET /health/self — service is up', async ({ healthApi }) => {

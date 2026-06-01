@@ -57,6 +57,14 @@ services:
       DEFAULT_TIMEOUT:    ${DEFAULT_TIMEOUT:-30000}
       NAVIGATION_TIMEOUT: ${NAVIGATION_TIMEOUT:-30000}
     volumes:
+      # Source mounts — override the baked-in COPY so local edits take effect
+      # without rebuilding the image. node_modules stays inside the container.
+      - ./playwright.config.ts:/app/playwright.config.ts:ro
+      - ./config.json:/app/config.json:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./src:/app/src:ro
+      - ./tests:/app/tests:ro
+      # Output mounts — written by the container, read on the host
       - ./allure-results:/app/allure-results
       - ./allure-report:/app/allure-report
       - ./playwright-report:/app/playwright-report
