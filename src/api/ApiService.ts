@@ -16,6 +16,10 @@ export abstract class ApiService {
     return this.client.put(path, opts);
   }
 
+  protected patch(path: string, opts: RequestOptions = {}): Promise<APIResponse> {
+    return this.client.patch(path, opts);
+  }
+
   protected delete(path: string, opts: RequestOptions = {}): Promise<APIResponse> {
     return this.client.delete(path, opts);
   }
