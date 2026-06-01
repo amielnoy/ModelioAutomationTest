@@ -15,7 +15,7 @@
       "title": "Total Tests",
       "type": "stat",
       "gridPos": { "x": 0, "y": 1, "w": 4, "h": 4 },
-      "targets": [{ "expr": "qa_tests_total", "legendFormat": "Total" }],
+      "targets": [{ "expr": "last_over_time(qa_tests_total[3h])", "legendFormat": "Total" }],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -31,7 +31,7 @@
       "title": "Passed",
       "type": "stat",
       "gridPos": { "x": 4, "y": 1, "w": 4, "h": 4 },
-      "targets": [{ "expr": "qa_tests_passed", "legendFormat": "Passed" }],
+      "targets": [{ "expr": "last_over_time(qa_tests_passed[3h])", "legendFormat": "Passed" }],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -47,7 +47,7 @@
       "title": "Failed",
       "type": "stat",
       "gridPos": { "x": 8, "y": 1, "w": 4, "h": 4 },
-      "targets": [{ "expr": "qa_tests_failed", "legendFormat": "Failed" }],
+      "targets": [{ "expr": "last_over_time(qa_tests_failed[3h])", "legendFormat": "Failed" }],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -63,7 +63,7 @@
       "title": "Flaky",
       "type": "stat",
       "gridPos": { "x": 12, "y": 1, "w": 4, "h": 4 },
-      "targets": [{ "expr": "qa_tests_flaky", "legendFormat": "Flaky" }],
+      "targets": [{ "expr": "last_over_time(qa_tests_flaky[3h])", "legendFormat": "Flaky" }],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -79,7 +79,7 @@
       "title": "Skipped",
       "type": "stat",
       "gridPos": { "x": 16, "y": 1, "w": 4, "h": 4 },
-      "targets": [{ "expr": "qa_tests_skipped", "legendFormat": "Skipped" }],
+      "targets": [{ "expr": "last_over_time(qa_tests_skipped[3h])", "legendFormat": "Skipped" }],
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -95,7 +95,7 @@
       "title": "Last Run Duration",
       "type": "stat",
       "gridPos": { "x": 20, "y": 1, "w": 4, "h": 4 },
-      "targets": [{ "expr": "qa_tests_duration_seconds", "legendFormat": "Duration" }],
+      "targets": [{ "expr": "last_over_time(qa_tests_duration_seconds[3h])", "legendFormat": "Duration" }],
       "fieldConfig": {
         "defaults": {
           "unit": "s",
