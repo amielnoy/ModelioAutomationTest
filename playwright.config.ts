@@ -15,6 +15,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 4 : config.playwright.workers,
   timeout: config.playwright.defaultTimeout,
+  expect: { timeout: config.playwright.defaultTimeout },
 
   // ── Reporters ────────────────────────────────────────────────────────────
   // Three reporters run simultaneously:

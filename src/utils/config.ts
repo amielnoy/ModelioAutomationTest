@@ -4,8 +4,10 @@
  */
 
 function requireEnv(key: string, fallback?: string): string {
-  const value = process.env[key] ?? fallback;
-  if (value === undefined) {
+  const value = process.env[key];
+  // Treat empty string (e.g. unset GitHub secret) the same as missing
+  if (!value) {
+    if (fallback !== undefined) return fallback;
     throw new Error(`Missing required environment variable: ${key}`);
   }
   return value;
