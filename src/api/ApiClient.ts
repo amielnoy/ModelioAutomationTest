@@ -1,6 +1,7 @@
 import { APIRequestContext, APIResponse } from '@playwright/test';
 import { Timeout } from './Timeout';
 import { ApiConstants } from './ApiConstants';
+import { config } from '../utils/config';
 
 export interface RequestOptions {
   params?: Record<string, string | number | boolean>;
@@ -25,6 +26,9 @@ export interface RequestOptions {
  * This is the ONLY place that knows the base URL, default headers, and timeout.
  * Tests import typed endpoint helpers, not this class directly.
  */
+const DEFAULT_RETRIES = 3;
+const RETRY_BACKOFF_MS = 200;
+
 export class ApiClient {
   private readonly baseUrl: string;
   private readonly defaultTimeout: number;
@@ -39,7 +43,7 @@ export class ApiClient {
     },
   ) {
     this.baseUrl        = options.baseUrl.replace(/\/$/, '');
-    this.defaultTimeout = options.timeout ?? 30_000;
+    this.defaultTimeout = options.timeout ?? config.api.timeout;
     this.defaultHeaders = {
       'Content-Type': 'application/json; charset=UTF-8',
       Accept: 'application/json',
@@ -77,7 +81,7 @@ export class ApiClient {
     opts: RequestOptions,
   ): Promise<APIResponse> {
     const url = `${this.baseUrl}${path}`;
-    const retries = opts.retries ?? 3;
+    const retries = opts.retries ?? DEFAULT_RETRIES;
     const timeout = new Timeout(opts.timeout ?? this.defaultTimeout);
     const headers = { ...this.defaultHeaders, ...opts.headers };
 
@@ -97,7 +101,7 @@ export class ApiClient {
         );
 
         if (response.status() >= ApiConstants.INTERNAL_SERVER_ERROR && attempt < retries) {
-          await this.sleep(200 * (attempt + 1));
+          await this.sleep(RETRY_BACKOFF_MS * (attempt + 1));
           continue;
         }
 
@@ -105,7 +109,7 @@ export class ApiClient {
       } catch (err) {
         lastError = err as Error;
         if (attempt < retries) {
-          await this.sleep(200 * (attempt + 1));
+          await this.sleep(RETRY_BACKOFF_MS * (attempt + 1));
         }
       }
     }

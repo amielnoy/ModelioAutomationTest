@@ -1,0 +1,25 @@
+{
+  "web": {
+    "baseUrl": "https://www.saucedemo.com",
+    "credentials": {
+      "standardUser": "standard_user",
+      "lockedUser": "locked_out_user",
+      "password": "secret_sauce"
+    }
+  },
+  "api": {
+    "baseUrl": "https://jsonplaceholder.typicode.com",
+    "timeout": 30000
+  },
+  "health": {
+    "apiUrl": "http://localhost:8000",
+    "grafanaUrl": "http://localhost:3000",
+    "allureReportUrl": "https://amielnoy.github.io/ModelioAutomationTest/"
+  },
+  "playwright": {
+    "defaultTimeout": 30000,
+    "navigationTimeout": 30000,
+    "workers": 4,
+    "browser": "chromium"
+  }
+}

@@ -1,45 +1,43 @@
+import defaults from '../../config.json';
+
 /**
- * Centralised configuration — all values sourced from environment variables.
+ * Centralised configuration — env vars override defaults from config.json.
  * Never import raw process.env in test or page files; always go through here.
  */
 
-function requireEnv(key: string, fallback?: string): string {
+function requireEnv(key: string, fallback: string): string {
   const value = process.env[key];
   // Treat empty string (e.g. unset GitHub secret) the same as missing
-  if (!value) {
-    if (fallback !== undefined) return fallback;
-    throw new Error(`Missing required environment variable: ${key}`);
-  }
-  return value;
+  return value || fallback;
 }
 
 export const config = {
   web: {
-    baseUrl: requireEnv('WEB_BASE_URL', 'https://www.saucedemo.com'),
+    baseUrl: requireEnv('WEB_BASE_URL', defaults.web.baseUrl),
     credentials: {
       standard: {
-        username: requireEnv('STANDARD_USER', 'standard_user'),
-        password: requireEnv('STANDARD_PASSWORD', 'secret_sauce'),
+        username: requireEnv('STANDARD_USER', defaults.web.credentials.standardUser),
+        password: requireEnv('STANDARD_PASSWORD', defaults.web.credentials.password),
       },
       locked: {
-        username: requireEnv('LOCKED_USER', 'locked_out_user'),
-        password: requireEnv('STANDARD_PASSWORD', 'secret_sauce'),
+        username: requireEnv('LOCKED_USER', defaults.web.credentials.lockedUser),
+        password: requireEnv('STANDARD_PASSWORD', defaults.web.credentials.password),
       },
     },
   },
   api: {
-    baseUrl: requireEnv('API_BASE_URL', 'https://jsonplaceholder.typicode.com'),
-    timeout: parseInt(requireEnv('DEFAULT_TIMEOUT', '30000'), 10),
+    baseUrl: requireEnv('API_BASE_URL', defaults.api.baseUrl),
+    timeout: parseInt(requireEnv('DEFAULT_TIMEOUT', String(defaults.api.timeout)), 10),
   },
   health: {
-    apiUrl:          requireEnv('HEALTH_API_URL',      'http://localhost:8000'),
-    grafanaUrl:      requireEnv('GRAFANA_URL',          'http://localhost:3000'),
-    allureReportUrl: requireEnv('ALLURE_REPORT_URL',   'https://amielnoy.github.io/ModelioAutomationTest/'),
+    apiUrl:          requireEnv('HEALTH_API_URL',    defaults.health.apiUrl),
+    grafanaUrl:      requireEnv('GRAFANA_URL',        defaults.health.grafanaUrl),
+    allureReportUrl: requireEnv('ALLURE_REPORT_URL', defaults.health.allureReportUrl),
   },
   playwright: {
-    defaultTimeout: parseInt(requireEnv('DEFAULT_TIMEOUT', '30000'), 10),
-    navigationTimeout: parseInt(requireEnv('NAVIGATION_TIMEOUT', '30000'), 10),
-    workers: parseInt(requireEnv('WORKERS', '4'), 10),
-    browser: (requireEnv('BROWSER', 'chromium') as 'chromium' | 'firefox' | 'webkit'),
+    defaultTimeout:    parseInt(requireEnv('DEFAULT_TIMEOUT',    String(defaults.playwright.defaultTimeout)), 10),
+    navigationTimeout: parseInt(requireEnv('NAVIGATION_TIMEOUT', String(defaults.playwright.navigationTimeout)), 10),
+    workers:           parseInt(requireEnv('WORKERS',            String(defaults.playwright.workers)), 10),
+    browser: (requireEnv('BROWSER', defaults.playwright.browser) as 'chromium' | 'firefox' | 'webkit'),
   },
 } as const;

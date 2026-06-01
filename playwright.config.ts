@@ -79,13 +79,22 @@ export default defineConfig({
 
   // ── Projects ─────────────────────────────────────────────────────────────
   projects: [
-    // UI tests run in real browsers
+    // Login once and persist session to .auth/user.json
+    {
+      name: 'setup',
+      testMatch: 'tests/auth.setup.ts',
+      use: { baseURL: config.web.baseUrl },
+    },
+
+    // UI tests run in real browsers — reuse the saved session
     {
       name: 'chromium',
       testMatch: 'tests/ui/**/*.spec.ts',
+      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         baseURL: config.web.baseUrl,
+        storageState: '.auth/user.json',
       },
     },
     // API tests use a headless "browser-less" project
