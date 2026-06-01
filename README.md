@@ -1,6 +1,6 @@
 # ModelioAutomationTest
 
-Production-grade Playwright + TypeScript automation framework covering **UI** (SauceDemo), **REST API** (JSONPlaceholder), and a **FastAPI health service** that monitors both. 18 tests run fully in parallel across three Playwright projects and are reported in Allure 3, deployed to GitHub Pages on every push to `main`.
+Production-grade Playwright + TypeScript automation framework covering **UI** (SauceDemo), **REST API** (JSONPlaceholder), and a **FastAPI health service** that monitors both. 25 tests run fully in parallel across four Playwright projects and are reported in Allure 3, deployed to GitHub Pages on every push to `main`.
 
 **Live Allure report →** https://amielnoy.github.io/ModelioAutomationTest/
 
@@ -57,17 +57,19 @@ No secrets are required — SauceDemo credentials are publicly listed on its log
 ```bash
 npm test                      # all tests (UI + API + health), 4 workers
 npm run test:ui               # UI tests only (Chromium)
-npm run test:api              # API tests only (JSONPlaceholder + health)
+npm run test:api              # API tests only (JSONPlaceholder — 6 tests)
 npm run test:headed           # headed browser (debug mode)
 npm run test:parallel         # explicit --workers=4
 
 npm run typecheck             # tsc --noEmit
 ```
 
+> **Note:** `npm test` includes the `health` project which requires the FastAPI service at `localhost:8000`. Without it the 5 health tests will fail. Either start it first (`./run.sh api`) or skip those tests with `npx playwright test --ignore-glob '**/health*'`.
+
 ### Run by tag
 
 ```bash
-npx playwright test --grep "@ui"            # 7 UI tests (login, cart, checkout, sorting)
+npx playwright test --grep "@ui"            # 14 UI tests (login, cart, checkout, sorting, data-driven)
 npx playwright test --grep "@api"           # 6 API tests (JSONPlaceholder CRUD)
 npx playwright test --grep "@health-check"  # 5 health tests (FastAPI endpoints + OpenAPI)
 ```
@@ -137,13 +139,18 @@ push
 ├── tests/
 │   ├── constants.ts          # shared test data (products, payloads, credentials)
 │   ├── auth.setup.ts         # login once → .auth/user.json (storageState)
+│   ├── data/
+│   │   ├── login.params.json # login scenario matrix (valid, locked, empty fields…)
+│   │   └── posts.params.json # GET /posts/{id} matrix (found, not-found, boundary)
 │   ├── ui/
-│   │   ├── login.spec.ts     # happy path + invalid credentials
-│   │   ├── cart.spec.ts      # add items, badge count
-│   │   └── checkout.spec.ts  # end-to-end + price sorting
+│   │   ├── login.spec.ts          # happy path + invalid credentials
+│   │   ├── login.data.spec.ts     # data-driven login (JSON params)
+│   │   ├── cart.spec.ts           # add items, badge count
+│   │   └── checkout.spec.ts       # end-to-end + price sorting
 │   └── api/
-│       ├── posts.spec.ts     # CRUD on /posts (JSONPlaceholder)
-│       └── health.spec.ts    # FastAPI health endpoints + OpenAPI spec
+│       ├── posts.spec.ts          # CRUD on /posts (JSONPlaceholder)
+│       ├── posts.data.spec.ts     # data-driven GET /posts/{id} (JSON params)
+│       └── health.spec.ts         # FastAPI health endpoints + OpenAPI spec
 │
 ├── src/
 │   ├── pages/                # Page Object Model (BasePage, LoginPage, InventoryPage, …)
