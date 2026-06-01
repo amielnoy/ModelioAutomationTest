@@ -1,5 +1,5 @@
 import { APIResponse } from '@playwright/test';
-import { ApiService } from './PostsApi';
+import { ApiService } from './ApiService';
 
 export interface ServiceHealth {
   status: 'ok' | 'degraded' | 'down';
