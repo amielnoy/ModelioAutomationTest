@@ -8,3 +8,4 @@ allure-report/
 # Keep allure-results/history/ if you want trend graphs — add it back explicitly
 *.local.*
 .DS_Store
+logs/

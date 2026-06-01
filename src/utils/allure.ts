@@ -14,11 +14,13 @@ import {
   feature,
   story,
   severity,
-  step,
+  step as allureJsStep,
   attachment,
   description,
   owner,
 } from 'allure-js-commons';
+import { test } from '@playwright/test';
+import { logger } from './logger';
 
 export type Severity = 'blocker' | 'critical' | 'normal' | 'minor' | 'trivial';
 
@@ -42,16 +44,21 @@ export const allureAttachment = (
 ) => attachment(name, content, { contentType: type });
 
 /**
- * Wrap a block of test code in a named Allure step.
- * Steps appear as a collapsible timeline in the Allure report.
+ * Unified step wrapper: Playwright test.step (trace) + Allure step (report) + logger.
  *
  * Usage:
  *   await allureStep('Add backpack to cart', async () => {
  *     await inventory.addToCart('Sauce Labs Backpack');
  *   });
  */
-export const allureStep = <T>(name: string, fn: () => Promise<T>): Promise<T> =>
-  Promise.resolve(step(name, fn));
+export const allureStep = <T>(name: string, fn: () => Promise<T>): Promise<T> => {
+  logger.step(`▶ ${name}`);
+  return test.step(name, () =>
+    Promise.resolve(allureJsStep(name, fn))
+      .then(result => { logger.pass(`✓ ${name}`); return result; })
+      .catch(err   => { logger.fail(`✗ ${name}`, err); throw err; }),
+  );
+};
 
 /** Add a free-text description to the test result. */
 export const allureDescription = (text: string) => description(text);
