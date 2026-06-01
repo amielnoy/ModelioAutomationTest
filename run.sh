@@ -30,7 +30,7 @@ generate_report() {
 open_servers() {
   local allure_url="http://localhost:5050"
   local swagger_url="http://localhost:8000/docs"
-  local grafana_url="http://localhost:3000"
+  local grafana_url="http://localhost:3000/d/qa-health/qa-system-health?orgId=1&from=now-3h&to=now&timezone=browser&refresh=15s"
 
   echo "▶ Opening servers in Chrome tabs..."
 
