@@ -168,6 +168,27 @@ jobs:
             console.log(line + '\n');
           "
 
+      # ── Server links in step summary ─────────────────────────────────────
+      - name: Write server links to step summary
+        if: always()
+        run: |
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          ALLURE_URL="https://amielnoy.github.io/ModelioAutomationTest/"
+          SWAGGER_URL="http://localhost:8000/docs"
+          FASTAPI_URL="http://localhost:8000"
+
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+
+          ## 🔗 Server Links
+
+          | Server | URL |
+          |---|---|
+          | 📊 Allure Report (GitHub Pages) | [$ALLURE_URL]($ALLURE_URL) |
+          | 📦 Playwright Report (artifact) | [Download from this run]($RUN_URL) |
+          | 🧪 Swagger UI (Health API) | [$SWAGGER_URL]($SWAGGER_URL) |
+          | ⚡ FastAPI (Health API) | [$FASTAPI_URL]($FASTAPI_URL) |
+          EOF
+
       # ── Upload Playwright HTML report ─────────────────────────────────────
       - name: Upload Playwright HTML report
         if: always()
