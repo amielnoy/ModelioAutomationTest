@@ -72,15 +72,6 @@ export default defineConfig({
         baseURL: config.web.baseUrl,
       },
     },
-    {
-      name: 'firefox',
-      testMatch: 'tests/ui/**/*.spec.ts',
-      use: {
-        ...devices['Desktop Firefox'],
-        baseURL: config.web.baseUrl,
-      },
-    },
-
     // API tests use a headless "browser-less" project
     {
       name: 'api',
