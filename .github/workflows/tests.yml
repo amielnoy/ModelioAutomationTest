@@ -189,6 +189,14 @@ jobs:
           fi
           echo "✅ All tests passed"
 
+      # ── Prevent Jekyll from stripping Allure data files ─────────────────
+      # GitHub Pages runs Jekyll by default; it silently drops files/dirs
+      # whose names start with '_'. Allure 3 assets reference such paths,
+      # causing individual test-result fetches to return 404.
+      - name: Add .nojekyll to allure report
+        if: always() && github.ref == 'refs/heads/main'
+        run: touch allure-report/.nojekyll
+
       # ── Upload Allure report as Pages artifact ────────────────────────
       - name: Upload Pages artifact
         if: always() && github.ref == 'refs/heads/main'
