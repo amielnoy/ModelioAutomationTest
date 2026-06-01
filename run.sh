@@ -26,11 +26,41 @@ generate_report() {
   echo "✅ Report written to allure-report/"
 }
 
+open_servers() {
+  local allure_url="http://localhost:5050"
+  local swagger_url="http://localhost:8000/docs"
+  local grafana_url="http://localhost:3000"
+
+  echo "▶ Opening servers in Chrome tabs..."
+
+  # Serve Allure report on a temporary port so it's reachable in the browser
+  if command -v npx &>/dev/null && [ -d allure-report ]; then
+    npx --yes http-server allure-report -p 5050 -s &
+    HTTP_SERVER_PID=$!
+    sleep 1
+  fi
+
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    open -a "Google Chrome" "$allure_url" "$swagger_url" "$grafana_url" 2>/dev/null \
+      || open "$allure_url" "$swagger_url" "$grafana_url"
+  else
+    for url in "$allure_url" "$swagger_url" "$grafana_url"; do
+      xdg-open "$url" 2>/dev/null || true
+    done
+  fi
+
+  echo "  Allure  → $allure_url"
+  echo "  Swagger → $swagger_url"
+  echo "  Grafana → $grafana_url"
+}
+
 case "$CMD" in
   all)
     build
+    docker compose up -d health-api prometheus grafana 2>/dev/null || true
     run_tests npx playwright test --workers=4
     generate_report
+    open_servers
     ;;
   ui)
     build
@@ -44,6 +74,7 @@ case "$CMD" in
     ;;
   report)
     npm run report:allure
+    open_servers
     ;;
   clean)
     echo "▶ Cleaning output directories..."
