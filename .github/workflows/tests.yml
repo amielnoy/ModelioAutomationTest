@@ -6,6 +6,12 @@ on:
   pull_request:
     branches: [main]
 
+# Required for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   test:
     name: Run UI + API tests
@@ -15,8 +21,8 @@ jobs:
     env:
       # Web target
       WEB_BASE_URL: https://www.saucedemo.com
-      STANDARD_USER: standard_user
-      STANDARD_PASSWORD: secret_sauce
+      STANDARD_USER: ${{ secrets.USERNAME }}
+      STANDARD_PASSWORD: ${{ secrets.PASSWORD }}
       LOCKED_USER: locked_out_user
       # API target
       API_BASE_URL: https://jsonplaceholder.typicode.com
@@ -120,3 +126,24 @@ jobs:
             exit 1
           fi
           echo "✅ All tests passed"
+
+      # ── Upload Allure report as Pages artifact ────────────────────────
+      - name: Upload Pages artifact
+        if: always() && github.ref == 'refs/heads/main'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: allure-report/
+
+  # ── Deploy to GitHub Pages (main branch only) ─────────────────────────
+  deploy-pages:
+    name: Deploy Allure report to GitHub Pages
+    needs: test
+    runs-on: ubuntu-latest
+    if: always() && github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
