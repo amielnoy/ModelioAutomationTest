@@ -1,0 +1,45 @@
+[
+  {
+    "scenario": "existing post — id 1",
+    "id": 1,
+    "expectedStatus": 200,
+    "expectedResult": "found",
+    "expectedBody": {
+      "id": 1,
+      "userId": 1
+    }
+  },
+  {
+    "scenario": "existing post — id 5",
+    "id": 5,
+    "expectedStatus": 200,
+    "expectedResult": "found",
+    "expectedBody": {
+      "id": 5,
+      "userId": 1
+    }
+  },
+  {
+    "scenario": "non-existent post — id 99999",
+    "id": 99999,
+    "expectedStatus": 404,
+    "expectedResult": "not_found",
+    "expectedBody": {}
+  },
+  {
+    "scenario": "boundary — id 100 (last valid)",
+    "id": 100,
+    "expectedStatus": 200,
+    "expectedResult": "found",
+    "expectedBody": {
+      "id": 100
+    }
+  },
+  {
+    "scenario": "boundary — id 101 (out of range)",
+    "id": 101,
+    "expectedStatus": 404,
+    "expectedResult": "not_found",
+    "expectedBody": {}
+  }
+]

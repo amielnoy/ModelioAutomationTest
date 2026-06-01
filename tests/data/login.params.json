@@ -1,0 +1,42 @@
+[
+  {
+    "scenario": "valid credentials — standard user",
+    "username": "standard_user",
+    "password": "secret_sauce",
+    "expectedResult": "success",
+    "expectedUrl": "/inventory.html",
+    "expectedError": null
+  },
+  {
+    "scenario": "wrong password — valid username",
+    "username": "standard_user",
+    "password": "wrong_password",
+    "expectedResult": "error",
+    "expectedUrl": null,
+    "expectedError": "Epic sadface: Username and password do not match any user in this service"
+  },
+  {
+    "scenario": "locked-out user",
+    "username": "locked_out_user",
+    "password": "secret_sauce",
+    "expectedResult": "error",
+    "expectedUrl": null,
+    "expectedError": "Epic sadface: Sorry, this user has been locked out."
+  },
+  {
+    "scenario": "empty username",
+    "username": "",
+    "password": "secret_sauce",
+    "expectedResult": "error",
+    "expectedUrl": null,
+    "expectedError": "Epic sadface: Username is required"
+  },
+  {
+    "scenario": "empty password",
+    "username": "standard_user",
+    "password": "",
+    "expectedResult": "error",
+    "expectedUrl": null,
+    "expectedError": "Epic sadface: Password is required"
+  }
+]
