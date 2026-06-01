@@ -19,10 +19,12 @@ services:
   # ── Prometheus ────────────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:v2.55.1
+    user: root
     ports:
       - "9090:9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
     depends_on:
       health-api:
         condition: service_healthy
@@ -73,3 +75,6 @@ services:
     depends_on:
       health-api:
         condition: service_healthy
+
+volumes:
+  prometheus_data:
