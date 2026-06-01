@@ -93,20 +93,18 @@ jobs:
         id: all-tests
 
       # ── Restore Allure history from previous run ──────────────────────────
-      - name: Download previous Allure report (for history)
-        if: always()
-        uses: dawidd6/action-download-artifact@v6
-        continue-on-error: true
+      - name: Restore Allure history cache
+        uses: actions/cache/restore@v4
         with:
-          name: allure-report
-          path: allure-report-prev/
-          if_no_artifact_found: ignore
+          path: allure-history/
+          key: allure-history-${{ github.run_id }}
+          restore-keys: allure-history-
 
       - name: Copy Allure history into results
         if: always()
         run: |
-          if [ -d allure-report-prev/history ]; then
-            cp -r allure-report-prev/history allure-results/
+          if [ -d allure-history ]; then
+            cp -r allure-history allure-results/history
             echo "History restored"
           else
             echo "No previous history"
@@ -116,6 +114,22 @@ jobs:
       - name: Generate Allure report
         if: always()
         run: npm run report:allure:ci
+
+      # ── Persist history for the next run ─────────────────────────────────
+      - name: Copy generated history to cache dir
+        if: always()
+        run: |
+          if [ -d allure-report/history ]; then
+            rm -rf allure-history
+            cp -r allure-report/history allure-history
+          fi
+
+      - name: Save Allure history cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: allure-history/
+          key: allure-history-${{ github.run_id }}
 
       # ── Test results summary (CLI + GitHub step summary) ─────────────────
       - name: Report test results
