@@ -12,7 +12,7 @@ export default defineConfig({
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
+  retries: process.env.CI ? 2 : 1,
   workers: process.env.CI ? 4 : config.playwright.workers,
   timeout: config.playwright.defaultTimeout,
   expect: { timeout: config.playwright.defaultTimeout },
@@ -50,6 +50,7 @@ export default defineConfig({
       },
     ],
     ['junit', { outputFile: 'test-results/junit.xml' }],
+    ['json', { outputFile: 'test-results/results.json' }],
     // Console list for live CI output
     ['list'],
   ],

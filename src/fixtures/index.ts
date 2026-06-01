@@ -99,9 +99,9 @@ export const test = base.extend<AppFixtures>({
         await route.fulfill({ status, body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
       };
       routes.push({ pattern: urlPattern, handler });
-      await page.route(urlPattern as any, handler);
+      await page.route(urlPattern as never, handler);
       return async () => {
-        await page.unroute(urlPattern as any, handler);
+        await page.unroute(urlPattern as never, handler);
       };
     };
 
@@ -109,7 +109,7 @@ export const test = base.extend<AppFixtures>({
 
     // Teardown: remove any registered routes
     for (const r of routes) {
-      await page.unroute(r.pattern as any, r.handler);
+      await page.unroute(r.pattern as never, r.handler);
     }
   },
 
@@ -160,7 +160,7 @@ export const test = base.extend<AppFixtures>({
     try {
       const videoPath = await page.video()?.path();
       if (videoPath && fs.existsSync(videoPath)) {
-        await allureAttachment('Failure video', fs.readFileSync(videoPath), 'video/webm' as any);
+        await allureAttachment('Failure video', fs.readFileSync(videoPath), 'video/webm' as never);
         logger.info(`  Video: ${videoPath}`);
       }
     } catch {

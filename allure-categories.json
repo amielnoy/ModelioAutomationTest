@@ -1,0 +1,19 @@
+[
+  {
+    "name": "Flaky tests",
+    "matchedStatuses": ["failed", "broken"],
+    "flaky": true
+  },
+  {
+    "name": "Product defects",
+    "matchedStatuses": ["failed"]
+  },
+  {
+    "name": "Test defects",
+    "matchedStatuses": ["broken"]
+  },
+  {
+    "name": "Ignored tests",
+    "matchedStatuses": ["skipped"]
+  }
+]
