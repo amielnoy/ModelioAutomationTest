@@ -9,7 +9,7 @@ import {
   allureStep,
   allureAttachment,
   allureRequirement,
-  allueBug,
+  allureBug,
 } from '../../src/utils/allure';
 import { JiraLinks } from '../constants';
 
@@ -20,7 +20,7 @@ test.describe('Health API — /health', { tag: '@health-check' }, () => {
     await allureStory('Service liveness');
     await allureSeverity('blocker');
     await allureRequirement(JiraLinks.requirements.HEALTH, 'PROJ-105 — Health API requirement');
-    await allueBug(JiraLinks.bugs.HEALTH_DOWN, 'BUG-15 — Service health down');
+    await allureBug(JiraLinks.bugs.HEALTH_DOWN, 'BUG-15 — Service health down');
 
     let response: Awaited<ReturnType<typeof healthApi.self>>;
 

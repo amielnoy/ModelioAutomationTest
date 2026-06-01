@@ -7,32 +7,12 @@ import {
   allureStory,
   allureSeverity,
   allureStep,
-  allureAttachment,
+  allureRequirement,
+  allureBug,
 } from '../../src/utils/allure';
 import { PostFixtures, JiraLinks } from '../constants';
-import { allureRequirement, allueBug } from '../../src/utils/allure';
 import { APIResponse } from '@playwright/test';
-
-async function attachRequestResponse(
-  method: string,
-  url: string,
-  requestData: unknown,
-  response: APIResponse,
-): Promise<void> {
-  const requestInfo = { method, url, body: requestData ?? null };
-  await allureAttachment('Request', JSON.stringify(requestInfo, null, 2), 'application/json');
-
-  const headers: Record<string, string> = {};
-  for (const [k, v] of Object.entries(response.headers())) headers[k] = v;
-  await allureAttachment('Response headers', JSON.stringify({ status: response.status(), headers }, null, 2), 'application/json');
-
-  const rawBody = await response.text();
-  try {
-    await allureAttachment('Response payload', JSON.stringify(JSON.parse(rawBody), null, 2), 'application/json');
-  } catch {
-    await allureAttachment('Response payload', rawBody, 'text/plain');
-  }
-}
+import { attachRequestResponse } from './helpers';
 
 test.describe('GET /posts', { tag: '@api' }, () => {
   test('returns 200 with a non-empty JSON array matching Post schema', async ({ postsApi }) => {
@@ -41,7 +21,7 @@ test.describe('GET /posts', { tag: '@api' }, () => {
     await allureStory('GET all posts');
     await allureSeverity('critical');
     await allureRequirement(JiraLinks.requirements.POSTS, 'PROJ-104 — Posts API requirement');
-    await allueBug(JiraLinks.bugs.POSTS_DELETE, 'BUG-14 — Posts DELETE response');
+    await allureBug(JiraLinks.bugs.POSTS_DELETE, 'BUG-14 — Posts DELETE response');
 
     let response!: APIResponse;
 
@@ -187,7 +167,7 @@ test.describe('PUT /posts/{id} and DELETE /posts/{id}', { tag: '@api' }, () => {
     await allureStory('Delete post');
     await allureSeverity('normal');
     await allureRequirement(JiraLinks.requirements.POSTS, 'PROJ-104 — Posts API requirement');
-    await allueBug(JiraLinks.bugs.POSTS_DELETE, 'BUG-14 — Posts DELETE response');
+    await allureBug(JiraLinks.bugs.POSTS_DELETE, 'BUG-14 — Posts DELETE response');
 
     let response!: APIResponse;
 

@@ -30,9 +30,7 @@ test.describe('GET /posts/{id} — data-driven', { tag: '@api' }, () => {
       });
 
       await allureStep(`Assert status ${params.expectedStatus} (expected: ${params.expectedResult})`, async () => {
-        expect(responseStatus).toBe(
-          params.expectedStatus === 200 ? ApiConstants.OK : ApiConstants.NOT_FOUND,
-        );
+        expect(responseStatus).toBe(params.expectedStatus);
       });
 
       await allureStep('Assert response body matches expected shape', async () => {

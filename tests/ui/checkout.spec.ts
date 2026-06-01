@@ -8,7 +8,7 @@ import {
   allureStep,
 } from '../../src/utils/allure';
 import { Products, SortOptions, CustomerInfo, JiraLinks } from '../constants';
-import { allureRequirement, allueBug } from '../../src/utils/allure';
+import { allureRequirement, allureBug } from '../../src/utils/allure';
 
 const PRODUCT = Products.BACKPACK;
 
@@ -21,7 +21,7 @@ test.describe('Checkout', { tag: '@ui' }, () => {
       await allureStory('End-to-end purchase flow');
       await allureSeverity('blocker');
       await allureRequirement(JiraLinks.requirements.CHECKOUT, 'PROJ-103 — Checkout requirement');
-      await allueBug(JiraLinks.bugs.CHECKOUT_FLOW, 'BUG-13 — Checkout flow');
+      await allureBug(JiraLinks.bugs.CHECKOUT_FLOW, 'BUG-13 — Checkout flow');
 
       const inventory = authenticatedInventory;
       const cart      = new CartPage(page);

@@ -24,11 +24,11 @@ test.describe('Login — data-driven', { tag: '@ui' }, () => {
 
       if (params.expectedResult === 'success') {
         await allureStep(`Assert redirect to ${params.expectedUrl}`, async () => {
-          await expect(page).toHaveURL(new RegExp(params.expectedUrl!));
+          await expect(page).toHaveURL(new RegExp(params.expectedUrl ?? '/inventory'));
         });
       } else {
         await allureStep(`Assert error message: "${params.expectedError}"`, async () => {
-          await loginPage.expectErrorContaining(params.expectedError!);
+          await loginPage.expectErrorContaining(params.expectedError ?? '');
         });
 
         await allureStep('Assert user remains on login page', async () => {

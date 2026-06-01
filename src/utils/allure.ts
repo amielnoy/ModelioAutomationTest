@@ -78,5 +78,5 @@ export const allureRequirement = (url: string, name?: string) =>
   link(url, name ?? url, 'tms');
 
 /** Link a test to a Jira bug / issue (Allure issue link type). */
-export const allueBug = (url: string, name?: string) =>
+export const allureBug = (url: string, name?: string) =>
   link(url, name ?? url, 'issue');
