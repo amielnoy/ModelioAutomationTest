@@ -56,7 +56,7 @@ The fixture layer is split into four files connected by chained `test.extend()` 
 |---|---|
 | `pages.ts` | `loginPage`, `inventoryPage`, `cartPage`, `checkoutPage` |
 | `api.ts` | `apiClient`, `postsApi`, `healthApi`, `mockApi` (route stub + auto-teardown) |
-| `auth.ts` | `workflows` (auth/cart/checkout) · `authenticatedInventory` (navigate to inventory, session already active) |
+| `auth.ts` | `authenticatedInventory` (navigate to inventory, session already active via storageState) |
 | `auto.ts` | `_serverLinks` (auto) · `_failureCapture` (auto, screenshot + video + trace on failure) |
 
 **Why fixtures over `beforeEach`?**  
@@ -124,6 +124,11 @@ The pipeline is split into five jobs to maximise concurrency and apply least-pri
 | `as never` casts on `page.route()` / `page.unroute()` | Introduced `RouteHandler` type alias (`(route, request) => Promise<void>`); casts eliminated |
 | `'chromium'` hardcoded string in `_failureCapture` | Replaced with `UI_PROJECTS = new Set(['chromium', 'firefox', 'webkit'])` — OCP-compliant, new projects need no fixture edit |
 | `'video/webm' as never` | Removed; `allureAttachment` accepts the MIME string directly |
+| All config defaults hardcoded as inline strings | Extracted to `config.json`; `config.ts` imports it as typed defaults — env vars still override |
+| `ApiClient` fallback timeout was magic `30_000` literal | Replaced with `config.api.timeout` sourced from `config.json` |
+| `workflows` fixture instantiated on every UI test but never used | Removed; `AuthWorkflow` / `CartWorkflow` / `CheckoutWorkflow` are available for future higher-level test composition |
+| Hardcoded `10_000` timeout in `auth.ts` `waitForURL` | Replaced with `config.playwright.defaultTimeout` |
+| `ApiService` missing `patch()` | Added; now fully mirrors `ApiClient`'s HTTP verb surface |
 
 ---
 
