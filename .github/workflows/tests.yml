@@ -117,27 +117,55 @@ jobs:
         if: always()
         run: npm run report:allure:ci
 
-      # ── Flaky test summary ────────────────────────────────────────────────
-      - name: Report flaky tests
+      # ── Test results summary (CLI + GitHub step summary) ─────────────────
+      - name: Report test results
         if: always()
         run: |
           node -e "
             const fs = require('fs');
-            const path = 'test-results/results.json';
-            if (!fs.existsSync(path)) { console.log('No results.json'); process.exit(0); }
-            const { suites } = JSON.parse(fs.readFileSync(path, 'utf8'));
-            const all = suites.flatMap(s => [s, ...(s.suites ?? [])]).flatMap(s => s.specs ?? []);
-            const flaky = all.filter(s => s.tests?.some(t => t.results?.length > 1 && t.results.at(-1)?.status === 'passed'));
-            const failed = all.filter(s => s.tests?.every(t => t.results?.at(-1)?.status !== 'passed') && s.tests?.some(t => t.results?.length));
-            let md = '## Test run summary\n';
-            md += '| Metric | Count |\n|---|---|\n';
-            md += \`| Total specs | \${all.length} |\n\`;
-            md += \`| Flaky (passed after retry) | \${flaky.length} |\n\`;
-            md += \`| Failed | \${failed.length} |\n\`;
-            if (flaky.length) { md += '\n### Flaky tests\n'; flaky.forEach(s => md += \`- \${s.title}\n\`); }
-            if (failed.length) { md += '\n### Failed tests\n'; failed.forEach(s => md += \`- \${s.title}\n\`); }
+            const p = 'test-results/results.json';
+            if (!fs.existsSync(p)) { console.log('No results.json'); process.exit(0); }
+            const { stats, suites } = JSON.parse(fs.readFileSync(p, 'utf8'));
+
+            // Duration formatting
+            const dur = stats.duration < 60000
+              ? (stats.duration / 1000).toFixed(1) + 's'
+              : Math.floor(stats.duration / 60000) + 'm ' + ((stats.duration % 60000) / 1000).toFixed(0) + 's';
+
+            // Flaky / failed spec names (for detail lists)
+            function allSpecs(suites) {
+              return suites.flatMap(s => [...(s.specs || []), ...allSpecs(s.suites || [])]);
+            }
+            const specs = allSpecs(suites);
+            const flakySpecs  = specs.filter(s => s.tests?.some(t => t.results?.length > 1 && t.results.at(-1)?.status === 'passed'));
+            const failedSpecs = specs.filter(s => s.tests?.some(t => t.results?.at(-1)?.status === 'failed' || t.results?.at(-1)?.status === 'timedOut'));
+
+            const icon  = stats.unexpected > 0 ? '✗' : stats.flaky > 0 ? '~' : '✓';
+            const label = stats.unexpected > 0 ? 'FAILED' : stats.flaky > 0 ? 'FLAKY' : 'PASSED';
+
+            // ── GitHub step summary (markdown) ───────────────────────────
+            let md = \`## \${icon} Test results — \${label}\n\n\`;
+            md += '| Metric | Value |\n|---|---|\n';
+            md += \`| Total   | \${stats.expected + stats.unexpected + stats.skipped} |\n\`;
+            md += \`| Passed  | \${stats.expected} |\n\`;
+            md += \`| Failed  | \${stats.unexpected} |\n\`;
+            md += \`| Skipped | \${stats.skipped} |\n\`;
+            md += \`| Flaky   | \${stats.flaky} |\n\`;
+            md += \`| Duration | \${dur} |\n\`;
+            if (flakySpecs.length)  { md += '\n### Flaky tests\n';  flakySpecs.forEach(s  => md += \`- \${s.title}\n\`); }
+            if (failedSpecs.length) { md += '\n### Failed tests\n'; failedSpecs.forEach(s => md += \`- \${s.title}\n\`); }
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, md);
-            console.log(md);
+
+            // ── CLI table ────────────────────────────────────────────────
+            const rows = [['Total', String(stats.expected + stats.unexpected + stats.skipped)], ['Passed', String(stats.expected)], ['Failed', String(stats.unexpected)], ['Skipped', String(stats.skipped)], ['Flaky', String(stats.flaky)], ['Duration', dur]];
+            const colW = Math.max(...rows.map(([k]) => k.length)) + 2;
+            const valW = Math.max(...rows.map(([,v]) => v.length)) + 2;
+            const line = '─'.repeat(colW + valW + 3);
+            console.log('\n' + line);
+            console.log('  Test results  ' + icon + ' ' + label);
+            console.log(line);
+            rows.forEach(([k, v]) => console.log('  ' + k.padEnd(colW) + v.padStart(valW)));
+            console.log(line + '\n');
           "
 
       # ── Upload Playwright HTML report ─────────────────────────────────────

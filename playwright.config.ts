@@ -58,6 +58,8 @@ export default defineConfig({
     ['json', { outputFile: 'test-results/results.json' }],
     // Console list for live CI output
     ['list'],
+    // Custom summary table printed after every run
+    ['./src/reporters/SummaryReporter.ts'],
   ],
 
   // ── Global use ───────────────────────────────────────────────────────────
