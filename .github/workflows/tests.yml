@@ -26,6 +26,8 @@ jobs:
       LOCKED_USER: locked_out_user
       # API target
       API_BASE_URL: https://jsonplaceholder.typicode.com
+      # Health API (FastAPI, started as background process in CI)
+      HEALTH_API_URL: http://localhost:8000
       # Playwright
       BROWSER: chromium
       WORKERS: 4
@@ -53,6 +55,29 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      # ── FastAPI health service ────────────────────────────────────────────
+      - name: Set up Python for health API
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install health API dependencies
+        run: pip install -r health_api/requirements.txt
+
+      - name: Start health API
+        run: uvicorn health_api.main:app --host 0.0.0.0 --port 8000 &
+        env:
+          WEB_BASE_URL: https://www.saucedemo.com
+          API_BASE_URL: https://jsonplaceholder.typicode.com
+
+      - name: Wait for health API to be ready
+        run: |
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:8000/health/self && echo "Health API ready" && break
+            echo "Waiting... ($i)"
+            sleep 2
+          done
+
       # ── Type-check ────────────────────────────────────────────────────────
       - name: TypeScript type-check
         run: npm run typecheck
