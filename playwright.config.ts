@@ -82,9 +82,18 @@ export default defineConfig({
     // API tests use a headless "browser-less" project
     {
       name: 'api',
-      testMatch: 'tests/api/**/*.spec.ts',
+      testMatch: 'tests/api/posts.spec.ts',
       use: {
         baseURL: config.api.baseUrl,
+      },
+    },
+
+    // Health checks against the FastAPI service
+    {
+      name: 'health',
+      testMatch: 'tests/api/health.spec.ts',
+      use: {
+        baseURL: config.health.apiUrl,
       },
     },
   ],

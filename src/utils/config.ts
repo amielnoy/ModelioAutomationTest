@@ -31,6 +31,9 @@ export const config = {
     baseUrl: requireEnv('API_BASE_URL', 'https://jsonplaceholder.typicode.com'),
     timeout: parseInt(requireEnv('DEFAULT_TIMEOUT', '30000'), 10),
   },
+  health: {
+    apiUrl: requireEnv('HEALTH_API_URL', 'http://localhost:8000'),
+  },
   playwright: {
     defaultTimeout: parseInt(requireEnv('DEFAULT_TIMEOUT', '30000'), 10),
     navigationTimeout: parseInt(requireEnv('NAVIGATION_TIMEOUT', '30000'), 10),

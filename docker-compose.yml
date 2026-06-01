@@ -1,13 +1,55 @@
 services:
+
+  # ── Health & Swagger API ──────────────────────────────────────────────────
+  health-api:
+    build: ./health_api
+    ports:
+      - "8000:8000"
+    environment:
+      WEB_BASE_URL:  ${WEB_BASE_URL:-https://www.saucedemo.com}
+      API_BASE_URL:  ${API_BASE_URL:-https://jsonplaceholder.typicode.com}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/self')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ── Prometheus ────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    depends_on:
+      health-api:
+        condition: service_healthy
+
+  # ── Grafana ───────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:11.4.0
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+  # ── Playwright test runner ────────────────────────────────────────────────
   tests:
     build: .
     environment:
-      CI: "true"
+      CI:                 "true"
       WEB_BASE_URL:       ${WEB_BASE_URL:-https://www.saucedemo.com}
       STANDARD_USER:      ${STANDARD_USER:-standard_user}
       STANDARD_PASSWORD:  ${STANDARD_PASSWORD:-secret_sauce}
       LOCKED_USER:        ${LOCKED_USER:-locked_out_user}
       API_BASE_URL:       ${API_BASE_URL:-https://jsonplaceholder.typicode.com}
+      HEALTH_API_URL:     http://health-api:8000
       BROWSER:            ${BROWSER:-chromium}
       WORKERS:            ${WORKERS:-4}
       DEFAULT_TIMEOUT:    ${DEFAULT_TIMEOUT:-30000}
@@ -18,3 +60,6 @@ services:
       - ./playwright-report:/app/playwright-report
       - ./test-results:/app/test-results
       - ./logs:/app/logs
+    depends_on:
+      health-api:
+        condition: service_healthy

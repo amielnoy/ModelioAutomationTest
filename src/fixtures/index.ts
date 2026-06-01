@@ -4,7 +4,7 @@ import { LoginPage, InventoryPage, CartPage, CheckoutPage } from '../pages';
 import { AuthWorkflow } from '../workflows/AuthWorkflow';
 import { CartWorkflow } from '../workflows/CartWorkflow';
 import { CheckoutWorkflow } from '../workflows/CheckoutWorkflow';
-import { ApiClient, PostsApi } from '../api';
+import { ApiClient, PostsApi, HealthApi } from '../api';
 import { config } from '../utils/config';
 import { allureAttachment } from '../utils/allure';
 import { logger } from '../utils/logger';
@@ -35,6 +35,7 @@ type Pages = {
 type ApiFixtures = {
   apiClient: ApiClient;
   postsApi: PostsApi;
+  healthApi: HealthApi;
   mockApi: {
     /**
      * Stub a network endpoint matching `urlPattern` with given status and body.
@@ -88,6 +89,11 @@ export const test = base.extend<AppFixtures>({
 
   postsApi: async ({ apiClient }, use) => {
     await use(new PostsApi(apiClient));
+  },
+
+  healthApi: async ({ request }, use) => {
+    const client = new ApiClient(request, { baseUrl: config.health.apiUrl });
+    await use(new HealthApi(client));
   },
 
   // ── Network mocking fixture ─────────────────────────────────────────────

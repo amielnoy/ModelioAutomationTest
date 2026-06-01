@@ -1,0 +1,59 @@
+{
+  "title": "QA System Health",
+  "uid": "qa-health",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "15s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request rate (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "rate(http_requests_total{job=\"health-api\"}[1m])",
+          "legendFormat": "{{method}} {{handler}} {{status_code}}"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Request latency p95 (s)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"health-api\"}[1m]))",
+          "legendFormat": "p95 {{handler}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Error rate (5xx / total)",
+      "type": "stat",
+      "gridPos": { "x": 0, "y": 8, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{job=\"health-api\",status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total{job=\"health-api\"}[5m]))",
+          "legendFormat": "error rate"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "percentunit" } }
+    },
+    {
+      "id": 4,
+      "title": "Health API uptime",
+      "type": "stat",
+      "gridPos": { "x": 6, "y": 8, "w": 6, "h": 4 },
+      "targets": [
+        {
+          "expr": "time() - process_start_time_seconds{job=\"health-api\"}",
+          "legendFormat": "uptime"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    }
+  ]
+}
