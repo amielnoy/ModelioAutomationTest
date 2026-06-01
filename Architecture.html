@@ -171,18 +171,18 @@
   <p>
     A production-grade end-to-end automation framework testing the <strong>SauceDemo</strong> web UI,
     the <strong>JSONPlaceholder</strong> REST API, and a custom <strong>FastAPI health service</strong>
-    that monitors both targets. All 18 tests run in parallel across three Playwright projects and are
+    that monitors both targets. 30 tests run in parallel across four Playwright projects and are
     reported in Allure 3, deployed to GitHub Pages after every push to <code>main</code>.
   </p>
 
   <div class="cards">
     <div class="card">
       <div class="card-title"><span class="badge ts">TS</span> UI Tests</div>
-      <div class="card-desc">7 Chromium tests covering login, cart, checkout, and product sorting on SauceDemo.</div>
+      <div class="card-desc">12 Chromium tests: login, cart, checkout, product sorting, plus 5 data-driven login scenarios from <code>login.params.json</code>.</div>
     </div>
     <div class="card">
       <div class="card-title"><span class="badge ts">TS</span> API Tests</div>
-      <div class="card-desc">6 tests exercising GET, POST, PUT, DELETE on JSONPlaceholder <code>/posts</code>.</div>
+      <div class="card-desc">11 tests: CRUD on JSONPlaceholder <code>/posts</code> plus 5 data-driven GET /posts/{id} scenarios from <code>posts.params.json</code>.</div>
     </div>
     <div class="card">
       <div class="card-title"><span class="badge ts">TS</span> Health Tests</div>
@@ -227,7 +227,7 @@
       <text x="410" y="34" text-anchor="middle"
             fill="#f0f6fc" font-size="14" font-weight="700">Test Runner (Playwright)</text>
       <text x="410" y="55" text-anchor="middle"
-            fill="#8b949e" font-size="11">TypeScript · fullyParallel · 4 workers · retries: CI=2 / local=1 · 18 tests total</text>
+            fill="#8b949e" font-size="11">TypeScript · fullyParallel · 4 workers · retries: CI=2 / local=0 · 30 tests total</text>
 
       <!-- branch lines from runner bottom center → three columns -->
       <path d="M 410,70 L 410,84 L 150,84 L 150,96"
@@ -247,7 +247,7 @@
       <text x="150" y="147" text-anchor="middle"
             fill="#f0f6fc" font-size="12" font-weight="500">tests/ui/**</text>
       <text x="150" y="166" text-anchor="middle"
-            fill="#8b949e" font-size="10.5">7 tests · Desktop Chrome</text>
+            fill="#8b949e" font-size="10.5">12 tests · Desktop Chrome</text>
 
       <!-- api -->
       <rect x="290" y="96" width="240" height="82" rx="8"
@@ -256,9 +256,9 @@
       <text x="318" y="119" text-anchor="middle"
             fill="#d29922" font-size="10" font-weight="700" letter-spacing="0.04em">api</text>
       <text x="410" y="147" text-anchor="middle"
-            fill="#f0f6fc" font-size="12" font-weight="500">posts.spec.ts</text>
+            fill="#f0f6fc" font-size="12" font-weight="500">posts.spec.ts · posts.data.spec.ts</text>
       <text x="410" y="166" text-anchor="middle"
-            fill="#8b949e" font-size="10.5">6 tests</text>
+            fill="#8b949e" font-size="10.5">11 tests</text>
 
       <!-- health -->
       <rect x="540" y="96" width="260" height="82" rx="8"
@@ -460,17 +460,16 @@
       <!-- ui/ block -->
       <rect x="14" y="103" width="198" height="112" rx="6" fill="#152318" stroke="#3fb95045" stroke-width="1"/>
       <text x="24" y="119" fill="#3fb950" font-size="10.5" font-weight="600">ui/</text>
-      <text x="34" y="135" fill="#c9d1d9" font-size="9.5">login.spec.ts</text>
+      <text x="34" y="135" fill="#c9d1d9" font-size="9.5">login.spec.ts · login.data.spec.ts</text>
       <text x="34" y="149" fill="#484f58" font-size="8.5">cart.spec.ts</text>
       <text x="34" y="163" fill="#484f58" font-size="8.5">checkout.spec.ts</text>
-      <text x="34" y="177" fill="#3fb95066" font-size="8">3 specs  ·  7 tests</text>
-      <text x="34" y="205" fill="#3fb95066" font-size="8">+ 1 intentional fail</text>
+      <text x="34" y="177" fill="#3fb95066" font-size="8">4 specs  ·  12 tests  · 1 intentional fail</text>
       <!-- api/ block -->
       <rect x="14" y="224" width="198" height="76" rx="6" fill="#152318" stroke="#3fb95045" stroke-width="1"/>
       <text x="24" y="240" fill="#3fb950" font-size="10.5" font-weight="600">api/</text>
-      <text x="34" y="256" fill="#c9d1d9" font-size="9.5">posts.spec.ts</text>
-      <text x="34" y="271" fill="#484f58" font-size="8.5">health.spec.ts</text>
-      <text x="34" y="287" fill="#3fb95066" font-size="8">2 specs  ·  11 tests</text>
+      <text x="34" y="256" fill="#c9d1d9" font-size="9.5">posts.spec.ts · posts.data.spec.ts</text>
+      <text x="34" y="271" fill="#484f58" font-size="8.5">health.spec.ts · helpers.ts</text>
+      <text x="34" y="287" fill="#3fb95066" font-size="8">3 specs  ·  16 tests</text>
 
       <!-- ═══ COL 2: SOURCE (blue) x=231 w=216 ═══ -->
       <rect x="231" y="70" width="216" height="322" rx="8" fill="#0d1e38" stroke="#58a6ff" stroke-width="1.5"/>
@@ -549,13 +548,19 @@
   <div class="tree">
 <span class="dir">ModelioAutomationTest/</span>
 ├── <span class="dir">tests/</span>
-│   ├── <span class="file">constants.ts</span>         <span class="note">← shared test data (products, payloads, credentials)</span>
+│   ├── <span class="file">constants.ts</span>         <span class="note">← shared test data (products, payloads, credentials, JiraLinks)</span>
+│   ├── <span class="dir">data/</span>
+│   │   ├── <span class="file">login.params.json</span>    <span class="note">← 5 login scenarios with expectedResult</span>
+│   │   └── <span class="file">posts.params.json</span>    <span class="note">← 5 GET /posts/{id} scenarios with expectedStatus</span>
 │   ├── <span class="dir">ui/</span>
 │   │   ├── <span class="file">login.spec.ts</span>        <span class="note">← happy path + invalid credentials</span>
+│   │   ├── <span class="file">login.data.spec.ts</span>   <span class="note">← data-driven login from login.params.json</span>
 │   │   ├── <span class="file">cart.spec.ts</span>         <span class="note">← add items, badge count</span>
 │   │   └── <span class="file">checkout.spec.ts</span>     <span class="note">← end-to-end + price sorting</span>
 │   └── <span class="dir">api/</span>
 │       ├── <span class="file">posts.spec.ts</span>        <span class="note">← CRUD on /posts</span>
+│       ├── <span class="file">posts.data.spec.ts</span>   <span class="note">← data-driven GET /posts/{id} from posts.params.json</span>
+│       ├── <span class="file">helpers.ts</span>           <span class="note">← attachRequestResponse helper</span>
 │       └── <span class="file">health.spec.ts</span>       <span class="note">← FastAPI health + OpenAPI spec</span>
 │
 ├── <span class="dir">src/</span>

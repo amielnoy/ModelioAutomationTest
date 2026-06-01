@@ -83,9 +83,41 @@ If a test fails in CI at 3am, the on-call engineer opens the GitHub Actions run 
 
 > **3am triage flow:** open report → find failing test → open trace → find the first divergence from expected state → correlate with network tab → open bug with exact reproduction steps.
 
+### Test tags
+
+All `test.describe` blocks carry a Playwright tag:
+
+| Tag | Scope |
+|---|---|
+| `@ui` | Chromium browser tests (login, cart, checkout, sorting) |
+| `@api` | JSONPlaceholder REST tests (posts CRUD + data-driven) |
+| `@health-check` | FastAPI health endpoint + OpenAPI spec tests |
+
+Run a single slice: `npx playwright test --grep "@api"`. The `run.sh` script passes `--grep "@ui|@api|@health-check"` to keep the setup project out of ad-hoc tag runs.
+
+### Allure Jira integration
+
+Every test attaches two Allure link annotations:
+
+- `allureRequirement(url, name)` — links to the requirements ticket (Allure link type `tms`) for traceability to the test plan.
+- `allureBug(url, name)` — links to the known issue tracker ticket (Allure link type `issue`) for context on expected failures.
+
+Both are thin wrappers over `allure-js-commons` `link()`, exported from `src/utils/allure.ts`.
+
+### Data-driven tests
+
+Two JSON param files drive parametrised scenarios:
+
+| File | Spec | Tests generated |
+|---|---|---|
+| `tests/data/login.params.json` | `tests/ui/login.data.spec.ts` | 5 login scenarios (valid, wrong password, locked out, empty fields) |
+| `tests/data/posts.params.json` | `tests/api/posts.data.spec.ts` | 5 GET /posts/{id} scenarios (valid IDs, 404 boundary cases) |
+
+Each JSON object carries an `expectedResult` field (`"success"` / `"error"`) so the spec branches on intent rather than hard-coding assertions per case. The spec loops with `for...of` over the imported JSON — no test-runner plugin required.
+
 The **Allure 3 report** is deployed to GitHub Pages after every push to `main`. History trend is preserved across runs via `actions/cache` — the `history/` folder is restored before generation and saved after, so trend graphs accumulate over time without requiring a token or an external artifact action.
 
-The **Grafana dashboard** surfaces test run metrics in real time. Stat panels use `last_over_time(...[3h])` to survive Prometheus staleness — without it, panels reset to 0 five minutes after each run completes.
+The **Grafana dashboard** surfaces test run metrics in real time. Stat panels use `max_over_time(...[3h])` to capture the peak value within the dashboard window — FastAPI resets gauge metrics to 0 after each run, so `last_over_time` would return 0. `max_over_time` returns the actual test counts recorded during the run.
 
 ### CI/CD pipeline — parallel job structure
 
