@@ -23,6 +23,26 @@ export const InvalidCredentials = {
   password: 'wrong_password',
 } as const;
 
+/** Base URL for example Jira project — replace with your actual instance. */
+const JIRA = 'https://your-org.atlassian.net/browse';
+
+export const JiraLinks = {
+  requirements: {
+    LOGIN:    `${JIRA}/PROJ-101`,
+    CART:     `${JIRA}/PROJ-102`,
+    CHECKOUT: `${JIRA}/PROJ-103`,
+    POSTS:    `${JIRA}/PROJ-104`,
+    HEALTH:   `${JIRA}/PROJ-105`,
+  },
+  bugs: {
+    LOGIN_BANNER:  `${JIRA}/BUG-11`,
+    CART_BADGE:    `${JIRA}/BUG-12`,
+    CHECKOUT_FLOW: `${JIRA}/BUG-13`,
+    POSTS_DELETE:  `${JIRA}/BUG-14`,
+    HEALTH_DOWN:   `${JIRA}/BUG-15`,
+  },
+} as const;
+
 export const PostFixtures = {
   VALID_ID:       1,
   NONEXISTENT_ID: 99999,
