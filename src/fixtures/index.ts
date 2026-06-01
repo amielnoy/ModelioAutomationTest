@@ -6,7 +6,7 @@ import { CartWorkflow } from '../workflows/CartWorkflow';
 import { CheckoutWorkflow } from '../workflows/CheckoutWorkflow';
 import { ApiClient, PostsApi, HealthApi } from '../api';
 import { config } from '../utils/config';
-import { allureAttachment } from '../utils/allure';
+import { allureAttachment, allureLink } from '../utils/allure';
 import { logger } from '../utils/logger';
 import { APIRequestContext, Route } from '@playwright/test';
 
@@ -23,6 +23,7 @@ import { APIRequestContext, Route } from '@playwright/test';
 
 type AutoFixtures = {
   _failureCapture: void;
+  _serverLinks: void;
 };
 
 type Pages = {
@@ -140,6 +141,17 @@ export const test = base.extend<AppFixtures>({
     );
     await use(inventoryPage);
   },
+
+  // ── Server links (auto) ─────────────────────────────────────────────────
+  // Adds clickable links to Swagger, FastAPI, Grafana, and the Allure report
+  // in every test result on the Allure report overview page.
+  _serverLinks: [async ({}, use) => {
+    await allureLink(`${config.health.apiUrl}/docs`, 'Swagger UI', 'tms');
+    await allureLink(config.health.apiUrl,           'FastAPI',    'tms');
+    await allureLink(config.health.grafanaUrl,        'Grafana',    'tms');
+    await allureLink(config.health.allureReportUrl,  'Allure',     'tms');
+    await use(undefined as unknown as void);
+  }, { auto: true }],
 
   // ── Failure capture (auto) ───────────────────────────────────────────────
   // Runs after every test. On failure: screenshot → Allure + log;

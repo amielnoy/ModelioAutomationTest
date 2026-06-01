@@ -32,7 +32,9 @@ export const config = {
     timeout: parseInt(requireEnv('DEFAULT_TIMEOUT', '30000'), 10),
   },
   health: {
-    apiUrl: requireEnv('HEALTH_API_URL', 'http://localhost:8000'),
+    apiUrl:          requireEnv('HEALTH_API_URL',      'http://localhost:8000'),
+    grafanaUrl:      requireEnv('GRAFANA_URL',          'http://localhost:3000'),
+    allureReportUrl: requireEnv('ALLURE_REPORT_URL',   'https://amielnoy.github.io/ModelioAutomationTest/'),
   },
   playwright: {
     defaultTimeout: parseInt(requireEnv('DEFAULT_TIMEOUT', '30000'), 10),

@@ -9,6 +9,7 @@ import { config } from './src/utils/config';
 
 export default defineConfig({
   // ── Global settings ─────────────────────────────────────────────────────
+  globalSetup: './src/utils/global-setup.ts',
   testDir: './tests',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
@@ -46,6 +47,10 @@ export default defineConfig({
           browser: config.playwright.browser,
           workers: String(config.playwright.workers),
           default_timeout_ms: String(config.playwright.defaultTimeout),
+          swagger_ui: `${config.health.apiUrl}/docs`,
+          fastapi: config.health.apiUrl,
+          grafana: config.health.grafanaUrl,
+          allure_report: config.health.allureReportUrl,
         },
       },
     ],
