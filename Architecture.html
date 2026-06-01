@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Framework Architecture — ModelioAutomationTest</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d1117;
+      color: #c9d1d9;
+      line-height: 1.6;
+    }
+
+    /* ── Nav ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: #161b22;
+      border-bottom: 1px solid #30363d;
+      padding: 0 2rem;
+      display: flex; align-items: center; gap: 2rem;
+      height: 56px;
+    }
+    nav .logo { font-weight: 700; font-size: 1.1rem; color: #58a6ff; white-space: nowrap; }
+    nav a { color: #8b949e; text-decoration: none; font-size: 0.9rem; transition: color 0.15s; }
+    nav a:hover { color: #c9d1d9; }
+
+    /* ── Layout ── */
+    .page { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    h1 { font-size: 2rem; font-weight: 700; color: #f0f6fc; margin-bottom: 0.25rem; }
+    .subtitle { color: #8b949e; margin-bottom: 2.5rem; }
+
+    h2 { font-size: 1.3rem; font-weight: 600; color: #f0f6fc; margin: 2.5rem 0 1rem;
+         padding-bottom: 0.4rem; border-bottom: 1px solid #30363d; }
+    h3 { font-size: 1rem; font-weight: 600; color: #79c0ff; margin: 1.2rem 0 0.5rem; }
+
+    p  { color: #8b949e; margin-bottom: 0.75rem; }
+    ul { color: #8b949e; padding-left: 1.4rem; margin-bottom: 0.75rem; }
+    li { margin-bottom: 0.3rem; }
+    code { background: #21262d; color: #e6edf3; padding: 0.1em 0.4em;
+           border-radius: 4px; font-size: 0.85em; font-family: 'SFMono-Regular', Consolas, monospace; }
+    strong { color: #c9d1d9; }
+
+    /* ── Cards ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .card {
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      transition: border-color 0.15s;
+    }
+    .card:hover { border-color: #58a6ff44; }
+    .card-title { font-weight: 600; color: #f0f6fc; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem; }
+    .card-desc  { font-size: 0.88rem; color: #8b949e; }
+    .badge {
+      display: inline-block; font-size: 0.7rem; font-weight: 600;
+      padding: 0.1em 0.55em; border-radius: 999px;
+      background: #21262d; color: #8b949e; border: 1px solid #30363d;
+    }
+    .badge.ts   { color: #3b82f6; border-color: #3b82f633; background: #3b82f611; }
+    .badge.py   { color: #f59e0b; border-color: #f59e0b33; background: #f59e0b11; }
+    .badge.ci   { color: #a78bfa; border-color: #a78bfa33; background: #a78bfa11; }
+    .badge.mon  { color: #34d399; border-color: #34d39933; background: #34d39911; }
+
+    /* ── Diagram ── */
+    .diagram {
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 1.5rem 2rem; font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 0.82rem; line-height: 1.8; overflow-x: auto; color: #c9d1d9;
+    }
+    .diagram .highlight { color: #58a6ff; }
+    .diagram .dim       { color: #484f58; }
+    .diagram .green     { color: #3fb950; }
+    .diagram .yellow    { color: #d29922; }
+    .diagram .purple    { color: #bc8cff; }
+    .diagram .red       { color: #f85149; }
+
+    /* ── File tree ── */
+    .tree {
+      background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+      padding: 1.2rem 1.6rem; font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 0.82rem; line-height: 1.9; overflow-x: auto;
+    }
+    .tree .dir  { color: #58a6ff; }
+    .tree .file { color: #c9d1d9; }
+    .tree .note { color: #484f58; }
+
+    /* ── Flow table ── */
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.88rem; }
+    th { background: #21262d; color: #8b949e; font-weight: 600; text-align: left;
+         padding: 0.6rem 1rem; border-bottom: 1px solid #30363d; }
+    td { padding: 0.55rem 1rem; border-bottom: 1px solid #21262d; color: #c9d1d9; vertical-align: top; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #1c2128; }
+
+    /* ── Pill lists ── */
+    .pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 0.75rem; }
+    .pill {
+      font-size: 0.78rem; padding: 0.2em 0.65em; border-radius: 999px;
+      background: #21262d; border: 1px solid #30363d; color: #8b949e;
+    }
+
+    /* ── Divider ── */
+    hr { border: none; border-top: 1px solid #21262d; margin: 2rem 0; }
+
+    /* ── Footer ── */
+    footer { text-align: center; color: #484f58; font-size: 0.8rem; padding: 2rem 0 0; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <span class="logo">ModelioAutomationTest</span>
+  <a href="#overview">Overview</a>
+  <a href="#structure">Structure</a>
+  <a href="#layers">Layers</a>
+  <a href="#flow">Test Flow</a>
+  <a href="#infra">Infrastructure</a>
+  <a href="#ci">CI/CD</a>
+  <a href="#reporting">Reporting</a>
+</nav>
+
+<div class="page">
+
+  <h1>Framework Architecture</h1>
+  <p class="subtitle">Playwright · TypeScript · FastAPI · Prometheus · Grafana · Allure 3 · GitHub Actions</p>
+
+  <!-- ── OVERVIEW ── -->
+  <h2 id="overview">Overview</h2>
+  <p>
+    A production-grade end-to-end automation framework testing the <strong>SauceDemo</strong> web UI,
+    the <strong>JSONPlaceholder</strong> REST API, and a custom <strong>FastAPI health service</strong>
+    that monitors both targets. All 18 tests run in parallel across three Playwright projects and are
+    reported in Allure 3, deployed to GitHub Pages after every push to <code>main</code>.
+  </p>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-title"><span class="badge ts">TS</span> UI Tests</div>
+      <div class="card-desc">7 Chromium tests covering login, cart, checkout, and product sorting on SauceDemo.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge ts">TS</span> API Tests</div>
+      <div class="card-desc">6 tests exercising GET, POST, PUT, DELETE on JSONPlaceholder <code>/posts</code>.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge ts">TS</span> Health Tests</div>
+      <div class="card-desc">5 tests verifying the FastAPI health endpoints and the OpenAPI/Swagger spec.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge py">PY</span> FastAPI Service</div>
+      <div class="card-desc">Health &amp; readiness API that probes SauceDemo and JSONPlaceholder; exposes Swagger UI and <code>/metrics</code>.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge mon">MON</span> Prometheus + Grafana</div>
+      <div class="card-desc">Scrapes <code>/metrics</code> every 15 s; Grafana dashboard shows request rate, p95 latency, error rate, uptime.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="badge ci">CI</span> GitHub Actions</div>
+      <div class="card-desc">Runs tests, generates Allure report, and deploys to GitHub Pages on every push to <code>main</code>.</div>
+    </div>
+  </div>
+
+  <!-- ── ARCHITECTURE DIAGRAM ── -->
+  <h2 id="structure">Architecture Diagram</h2>
+  <div class="diagram">
+<span class="highlight">┌─────────────────────────────────────────────────────────────────────┐</span>
+<span class="highlight">│                       Test Runner (Playwright)                       │</span>
+<span class="highlight">└────────────────────┬──────────────────┬──────────────────┬──────────┘</span>
+                     │                  │                  │
+         <span class="green">┌───────────▼──────┐</span>  <span class="yellow">┌──────────▼──────┐</span>  <span class="purple">┌──────────▼──────┐</span>
+         <span class="green">│ project: chromium│</span>  <span class="yellow">│  project: api   │</span>  <span class="purple">│ project: health │</span>
+         <span class="green">│  tests/ui/**     │</span>  <span class="yellow">│ posts.spec.ts   │</span>  <span class="purple">│ health.spec.ts  │</span>
+         <span class="green">│  7 tests         │</span>  <span class="yellow">│  6 tests        │</span>  <span class="purple">│  5 tests        │</span>
+         <span class="green">└──────┬───────────┘</span>  <span class="yellow">└────────┬────────┘</span>  <span class="purple">└────────┬────────┘</span>
+                │                        │                  │
+         <span class="green">┌──────▼───────────┐</span>  <span class="yellow">┌────────▼────────┐</span>  <span class="purple">┌────────▼────────┐</span>
+         <span class="green">│  Page Objects    │</span>  <span class="yellow">│   PostsApi      │</span>  <span class="purple">│   HealthApi     │</span>
+         <span class="green">│  + Workflows     │</span>  <span class="yellow">│   ApiClient     │</span>  <span class="purple">│   ApiClient     │</span>
+         <span class="green">└──────┬───────────┘</span>  <span class="yellow">└────────┬────────┘</span>  <span class="purple">└────────┬────────┘</span>
+                │                        │                  │
+         <span class="green">┌──────▼───────────┐</span>  <span class="yellow">┌────────▼────────┐</span>  <span class="purple">┌────────▼────────┐</span>
+         <span class="green">│  saucedemo.com   │</span>  <span class="yellow">│ jsonplaceholder │</span>  <span class="purple">│ localhost:8000  │</span>
+         <span class="green">│  (browser)       │</span>  <span class="yellow">│    .typicode    │</span>  <span class="purple">│ (FastAPI)       │</span>
+         <span class="green">└──────────────────┘</span>  <span class="yellow">└─────────────────┘</span>  <span class="purple">└────────┬────────┘</span>
+                                                             │
+                                              <span class="dim">┌──────────────▼────────────┐</span>
+                                              <span class="dim">│  probes ↓              ↓  │</span>
+                                              <span class="dim">│ saucedemo  jsonplaceholder│</span>
+                                              <span class="dim">└───────────────────────────┘</span>
+
+<span class="highlight">Fixtures (src/fixtures/index.ts) — injected into every test</span>
+  authenticatedInventory  <span class="dim">→ logs in, returns InventoryPage</span>
+  postsApi / healthApi    <span class="dim">→ API service instances</span>
+  _failureCapture (auto)  <span class="dim">→ screenshot + video + trace on failure</span>
+  _serverLinks (auto)     <span class="dim">→ allureLink() for each server</span>
+
+<span class="highlight">Reporters</span>
+  list            <span class="dim">→ live terminal output</span>
+  SummaryReporter <span class="dim">→ passed/failed/skipped/flaky table after run</span>
+  allure-playwright <span class="dim">→ allure-results/ (raw JSON)</span>
+  html            <span class="dim">→ playwright-report/</span>
+  junit + json    <span class="dim">→ test-results/</span>
+  </div>
+
+  <!-- ── FILE STRUCTURE ── -->
+  <h2>File Structure</h2>
+  <div class="tree">
+<span class="dir">ModelioAutomationTest/</span>
+├── <span class="dir">tests/</span>
+│   ├── <span class="dir">ui/</span>
+│   │   ├── <span class="file">login.spec.ts</span>        <span class="note">← happy path + invalid credentials</span>
+│   │   ├── <span class="file">cart.spec.ts</span>         <span class="note">← add items, badge count</span>
+│   │   └── <span class="file">checkout.spec.ts</span>     <span class="note">← end-to-end + price sorting</span>
+│   └── <span class="dir">api/</span>
+│       ├── <span class="file">posts.spec.ts</span>        <span class="note">← CRUD on /posts</span>
+│       └── <span class="file">health.spec.ts</span>       <span class="note">← FastAPI health + OpenAPI spec</span>
+│
+├── <span class="dir">src/</span>
+│   ├── <span class="dir">pages/</span>               <span class="note">← Page Object Model</span>
+│   │   ├── <span class="file">BasePage.ts</span>
+│   │   ├── <span class="file">LoginPage.ts</span>
+│   │   ├── <span class="file">InventoryPage.ts</span>
+│   │   ├── <span class="file">CartPage.ts</span>
+│   │   ├── <span class="file">CheckoutPage.ts</span>
+│   │   └── <span class="dir">components/</span>
+│   │       ├── <span class="file">CartItem.ts</span>
+│   │       └── <span class="file">InventoryItem.ts</span>
+│   │
+│   ├── <span class="dir">api/</span>                 <span class="note">← API service layer</span>
+│   │   ├── <span class="file">ApiClient.ts</span>         <span class="note">← base HTTP client</span>
+│   │   ├── <span class="file">ApiConstants.ts</span>      <span class="note">← HTTP status codes</span>
+│   │   ├── <span class="file">PostsApi.ts</span>          <span class="note">← /posts endpoints</span>
+│   │   └── <span class="file">HealthApi.ts</span>         <span class="note">← /health endpoints</span>
+│   │
+│   ├── <span class="dir">workflows/</span>           <span class="note">← multi-step business flows</span>
+│   │   ├── <span class="file">AuthWorkflow.ts</span>
+│   │   ├── <span class="file">CartWorkflow.ts</span>
+│   │   └── <span class="file">CheckoutWorkflow.ts</span>
+│   │
+│   ├── <span class="dir">fixtures/</span>
+│   │   └── <span class="file">index.ts</span>             <span class="note">← test.extend() — all fixtures</span>
+│   │
+│   ├── <span class="dir">reporters/</span>
+│   │   └── <span class="file">SummaryReporter.ts</span>   <span class="note">← CLI summary table</span>
+│   │
+│   └── <span class="dir">utils/</span>
+│       ├── <span class="file">allure.ts</span>            <span class="note">← allureStep / allureLink / allureAttachment</span>
+│       ├── <span class="file">config.ts</span>            <span class="note">← all env vars in one place</span>
+│       ├── <span class="file">logger.ts</span>            <span class="note">← console + daily rotating log file</span>
+│       └── <span class="file">global-setup.ts</span>      <span class="note">← server links banner</span>
+│
+├── <span class="dir">health_api/</span>          <span class="note">← Python FastAPI service</span>
+│   ├── <span class="file">main.py</span>
+│   ├── <span class="file">requirements.txt</span>
+│   └── <span class="file">Dockerfile</span>
+│
+├── <span class="dir">prometheus/</span>
+│   └── <span class="file">prometheus.yml</span>       <span class="note">← scrape config</span>
+│
+├── <span class="dir">grafana/provisioning/</span>
+│   ├── <span class="dir">datasources/</span>
+│   │   └── <span class="file">prometheus.yml</span>
+│   └── <span class="dir">dashboards/</span>
+│       ├── <span class="file">dashboards.yml</span>
+│       └── <span class="file">health.json</span>          <span class="note">← 4-panel dashboard</span>
+│
+├── <span class="dir">.github/workflows/</span>
+│   └── <span class="file">tests.yml</span>            <span class="note">← CI pipeline</span>
+│
+├── <span class="file">playwright.config.ts</span>
+├── <span class="file">docker-compose.yml</span>   <span class="note">← health-api + prometheus + grafana + tests</span>
+├── <span class="file">Dockerfile</span>           <span class="note">← Playwright test image (with Java for Allure)</span>
+├── <span class="file">run.sh</span>               <span class="note">← ./run.sh [all|ui|api|report|clean]</span>
+└── <span class="file">allure-categories.json</span>
+  </div>
+
+  <!-- ── LAYERS ── -->
+  <h2 id="layers">Layer Breakdown</h2>
+
+  <h3>1 — Test Layer (<code>tests/</code>)</h3>
+  <p>Thin specs: each test imports from <code>src/fixtures</code>, calls high-level methods, and wraps steps in <code>allureStep()</code>. No page/API implementation detail leaks in.</p>
+
+  <h3>2 — Fixture Layer (<code>src/fixtures/index.ts</code>)</h3>
+  <p>Single <code>test.extend()</code> that wires all pages, API services, workflows, and auto-fixtures together. Provides:</p>
+  <ul>
+    <li><code>authenticatedInventory</code> — logs in and returns an <code>InventoryPage</code></li>
+    <li><code>postsApi</code> / <code>healthApi</code> — API service instances scoped per test</li>
+    <li><code>mockApi</code> — <code>page.route()</code> stub helper with automatic teardown</li>
+    <li><code>_failureCapture</code> (auto) — attaches screenshot, video, trace to Allure on failure</li>
+    <li><code>_serverLinks</code> (auto) — adds Allure links to every test result</li>
+  </ul>
+
+  <h3>3 — Page Object Layer (<code>src/pages/</code>)</h3>
+  <p>Each page extends <code>BasePage</code> which holds the <code>Page</code> reference and common helpers. Pages expose intent-revealing methods (<code>login()</code>, <code>addToCart()</code>, <code>proceedToCheckout()</code>) and encapsulate all <code>data-test</code> attribute selectors.</p>
+
+  <h3>4 — API Service Layer (<code>src/api/</code>)</h3>
+  <p><code>ApiClient</code> wraps Playwright's <code>APIRequestContext</code>. <code>PostsApi</code> and <code>HealthApi</code> extend it with typed endpoint methods. No raw <code>request.get()</code> calls appear in tests.</p>
+
+  <h3>5 — Workflow Layer (<code>src/workflows/</code>)</h3>
+  <p>Multi-step sequences (<code>AuthWorkflow.login()</code>, <code>CartWorkflow.addItems()</code>, <code>CheckoutWorkflow.complete()</code>) that compose Page Object calls, keeping test bodies short.</p>
+
+  <h3>6 — Utility Layer (<code>src/utils/</code>)</h3>
+  <div class="cards" style="margin-top:0.5rem">
+    <div class="card">
+      <div class="card-title">allure.ts</div>
+      <div class="card-desc">Wraps allure-js-commons. <code>allureStep()</code> chains Playwright's <code>test.step()</code>, Allure's step, and the logger in one call.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">config.ts</div>
+      <div class="card-desc">Single source of truth for env vars. <code>requireEnv(key, fallback)</code> treats empty strings as missing — critical for GitHub secrets.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">logger.ts</div>
+      <div class="card-desc">Dual-sink: <code>console.log</code> + append to <code>logs/YYYY-MM-DD.log</code>. Levels: INFO, STEP, PASS, FAIL, WARN, DEBUG.</div>
+    </div>
+    <div class="card">
+      <div class="card-title">global-setup.ts</div>
+      <div class="card-desc">Prints the server-links banner at run start. Local-only links (Swagger, FastAPI, Grafana) omitted in CI.</div>
+    </div>
+  </div>
+
+  <!-- ── TEST FLOW ── -->
+  <h2 id="flow">Test Execution Flow</h2>
+  <table>
+    <thead>
+      <tr><th>Phase</th><th>What happens</th><th>Where</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>globalSetup</strong></td><td>Prints server-links banner to stdout</td><td><code>global-setup.ts</code></td></tr>
+      <tr><td><strong>Fixture setup</strong></td><td><code>_serverLinks</code> adds Allure links; fixture graph is resolved per test</td><td><code>fixtures/index.ts</code></td></tr>
+      <tr><td><strong>Test body</strong></td><td>Steps logged to console + Allure + log file via <code>allureStep()</code></td><td><code>tests/**/*.spec.ts</code></td></tr>
+      <tr><td><strong>Fixture teardown</strong></td><td><code>_failureCapture</code> (auto) attaches screenshot / video / trace on failure</td><td><code>fixtures/index.ts</code></td></tr>
+      <tr><td><strong>Reporters flush</strong></td><td>allure-results JSON, playwright-report, junit.xml, results.json written</td><td><code>playwright.config.ts</code></td></tr>
+      <tr><td><strong>SummaryReporter.onEnd</strong></td><td>Prints passed/failed/skipped/flaky table; appends counts to <code>environment.properties</code></td><td><code>reporters/SummaryReporter.ts</code></td></tr>
+    </tbody>
+  </table>
+
+  <!-- ── INFRASTRUCTURE ── -->
+  <h2 id="infra">Infrastructure (Docker Compose)</h2>
+  <p>Four services defined in <code>docker-compose.yml</code>:</p>
+  <table>
+    <thead>
+      <tr><th>Service</th><th>Image</th><th>Port</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>health-api</code></td>
+        <td><code>./health_api</code> (Python 3.12)</td>
+        <td>8000</td>
+        <td>FastAPI; probes SauceDemo + JSONPlaceholder; Swagger UI at <code>/docs</code>; Prometheus metrics at <code>/metrics</code></td>
+      </tr>
+      <tr>
+        <td><code>prometheus</code></td>
+        <td><code>prom/prometheus:v2.55.1</code></td>
+        <td>9090</td>
+        <td>Scrapes <code>health-api:8000/metrics</code> every 15 s</td>
+      </tr>
+      <tr>
+        <td><code>grafana</code></td>
+        <td><code>grafana/grafana:11.4.0</code></td>
+        <td>3000</td>
+        <td>Pre-provisioned dashboard: request rate, p95 latency, error rate, uptime</td>
+      </tr>
+      <tr>
+        <td><code>tests</code></td>
+        <td><code>./Dockerfile</code> (Playwright + JDK 17)</td>
+        <td>—</td>
+        <td>Runs all Playwright tests against the stack; depends on healthy <code>health-api</code></td>
+      </tr>
+    </tbody>
+  </table>
+  <p>Run locally: <code>./run.sh all</code> &nbsp;|&nbsp; <code>./run.sh report</code> &nbsp;|&nbsp; <code>./run.sh clean</code></p>
+
+  <!-- ── CI/CD ── -->
+  <h2 id="ci">CI / CD Pipeline</h2>
+  <div class="diagram">
+push to main
+    │
+    ▼
+<span class="green">┌─ job: test ─────────────────────────────────────────────────────────┐</span>
+│  checkout → setup-node(20) → npm ci                                 │
+│  → setup-java(17) [Allure requires JRE]                             │
+│  → setup-python(3.12) → pip install health_api/requirements.txt     │
+│  → uvicorn health_api.main:app --port 8000 &amp;                        │
+│  → wait for /health/self                                            │
+│  → tsc --noEmit                                                     │
+│  → playwright install --with-deps chromium                          │
+│  → npx playwright test --workers=4         <span class="yellow">(continue-on-error)</span>       │
+│  → restore Allure history artifact                                  │
+│  → npx allure generate → allure-report/                             │
+│  → node summary script → GITHUB_STEP_SUMMARY                        │
+│  → upload: playwright-report, allure-report, allure-results,        │
+│            test-results                                             │
+│  → touch allure-report/.nojekyll  <span class="dim">(prevents Jekyll stripping files)</span>│
+│  → upload-pages-artifact                                            │
+│  → check test outcomes (fail job if tests failed)                   │
+<span class="green">└─────────────────────────────────────────────────────────────────────┘</span>
+    │
+    ▼ (if main branch)
+<span class="purple">┌─ job: deploy-pages ─────────────────────────────────────────────────┐</span>
+│  actions/deploy-pages → GitHub Pages                                │
+│  → https://amielnoy.github.io/ModelioAutomationTest/               │
+<span class="purple">└─────────────────────────────────────────────────────────────────────┘</span>
+  </div>
+
+  <!-- ── REPORTING ── -->
+  <h2 id="reporting">Reporting Stack</h2>
+  <div class="cards">
+    <div class="card">
+      <div class="card-title">Allure 3 (GitHub Pages)</div>
+      <div class="card-desc">
+        Published at every push. Includes history trend, categories (flaky/product defect/test defect),
+        environment info with test counts, per-test steps, request/response attachments,
+        screenshot + video + trace on failure.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Playwright HTML</div>
+      <div class="card-desc">
+        Fast local report. Uploaded as <code>playwright-report</code> artifact. Kept 14 days.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">JUnit XML + JSON</div>
+      <div class="card-desc">
+        <code>test-results/junit.xml</code> for CI dashboards; <code>results.json</code> used by
+        <code>SummaryReporter</code> and the GitHub step summary script.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">CLI Summary Table</div>
+      <div class="card-desc">
+        <code>SummaryReporter.onEnd()</code> prints Total / Passed / Failed / Skipped / Flaky / Duration
+        after every run. Same table appears in GitHub's step summary as markdown.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Daily Log File</div>
+      <div class="card-desc">
+        <code>logger.ts</code> appends every step to <code>logs/YYYY-MM-DD.log</code> with timestamps
+        and severity levels.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Grafana Dashboard</div>
+      <div class="card-desc">
+        4 panels: HTTP request rate, p95 response latency, error rate, service uptime.
+        Powered by Prometheus scraping the FastAPI <code>/metrics</code> endpoint.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── KEY DECISIONS ── -->
+  <h2>Key Design Decisions</h2>
+  <table>
+    <thead>
+      <tr><th>Decision</th><th>Rationale</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>if (!value)</code> in requireEnv</td><td>GitHub secrets resolve to <code>""</code> (empty string) when unset — <code>?? fallback</code> doesn't catch that.</td></tr>
+      <tr><td><code>expect.timeout</code> in playwright.config</td><td>Without it, Playwright defaults assertion timeout to 5 s, causing all UI tests to time out in CI.</td></tr>
+      <tr><td>Java (JDK 17) in Dockerfile &amp; CI</td><td><code>allure-commandline</code> is a Java binary — required inside Docker and in the GitHub Actions runner.</td></tr>
+      <tr><td><code>.nojekyll</code> in allure-report</td><td>Jekyll (default GitHub Pages processor) silently drops files/dirs whose names start with <code>_</code>, causing Allure 3 test-case fetches to 404.</td></tr>
+      <tr><td>Custom <code>SummaryReporter</code></td><td><code>globalTeardown</code> stdout is swallowed by Playwright's subprocess model; a custom reporter's <code>onEnd</code> runs in the main process.</td></tr>
+      <tr><td>Localhost links skipped in CI</td><td>Grafana/FastAPI/Swagger run only via Docker locally; embedding <code>localhost</code> URLs in the GitHub Pages Allure report would always 404.</td></tr>
+      <tr><td><code>fullyParallel: true</code> + 4 workers</td><td>All 18 tests complete in ~5 s locally and in CI; no shared browser state between tests.</td></tr>
+      <tr><td>Allure history via artifact download</td><td><code>dawidd6/action-download-artifact</code> fetches the previous run's <code>history/</code> folder so the trend graph builds up across runs.</td></tr>
+    </tbody>
+  </table>
+
+  <hr />
+  <footer>
+    Generated 2026-06-01 &nbsp;·&nbsp; ModelioAutomationTest &nbsp;·&nbsp;
+    <a href="https://amielnoy.github.io/ModelioAutomationTest/" style="color:#58a6ff">Allure Report</a>
+  </footer>
+
+</div>
+</body>
+</html>
