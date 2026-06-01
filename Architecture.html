@@ -158,6 +158,7 @@
   <a href="#infra">Infrastructure</a>
   <a href="#ci">CI/CD</a>
   <a href="#reporting">Reporting</a>
+  <a href="DESIGN.md" style="margin-left:auto;color:#58a6ff">Design Rationale →</a>
 </nav>
 
 <div class="page">
@@ -357,31 +358,35 @@
 
   <!-- ── FIXTURES ── -->
   <h3 style="margin-top:1.6rem;margin-bottom:0.75rem">Fixtures — injected into every test</h3>
+  <p style="color:#8b949e;font-size:0.85rem;margin-bottom:0.75rem">
+    Split across four files, each extending the previous via chained <code>test.extend()</code>.
+    <code>index.ts</code> re-exports the final composed <code>test</code> and <code>AppFixtures</code> type.
+  </p>
   <div class="flow-grid">
+    <div class="flow-item">
+      <div class="fi-label">pages.ts</div>
+      <div class="fi-title">Page fixtures</div>
+      <div class="fi-desc"><code>loginPage</code>, <code>inventoryPage</code>, <code>cartPage</code>, <code>checkoutPage</code></div>
+    </div>
+    <div class="flow-item">
+      <div class="fi-label">api.ts</div>
+      <div class="fi-title">API fixtures</div>
+      <div class="fi-desc"><code>apiClient</code>, <code>postsApi</code>, <code>healthApi</code>, <code>mockApi</code> (route stub with auto-teardown)</div>
+    </div>
+    <div class="flow-item">
+      <div class="fi-label">auth.ts</div>
+      <div class="fi-title">Auth fixtures</div>
+      <div class="fi-desc"><code>workflows</code> (auth/cart/checkout) + <code>authenticatedInventory</code> — logs in, returns <code>InventoryPage</code></div>
+    </div>
     <div class="flow-item auto-fix">
-      <div class="fi-label">auto fixture</div>
+      <div class="fi-label">auto fixture · auto.ts</div>
       <div class="fi-title">_serverLinks</div>
-      <div class="fi-desc">Adds clickable Allure links to every test result (Swagger, FastAPI, Grafana, Allure)</div>
+      <div class="fi-desc">Adds Allure links (Swagger, FastAPI, Grafana, Allure) to every test result</div>
     </div>
     <div class="flow-item auto-fix">
-      <div class="fi-label">auto fixture</div>
+      <div class="fi-label">auto fixture · auto.ts</div>
       <div class="fi-title">_failureCapture</div>
-      <div class="fi-desc">On failure: captures screenshot + video + trace and attaches them to Allure (UI tests only)</div>
-    </div>
-    <div class="flow-item">
-      <div class="fi-label">UI fixture</div>
-      <div class="fi-title">authenticatedInventory</div>
-      <div class="fi-desc">Logs in as standard_user via <code>AuthWorkflow</code> and returns an <code>InventoryPage</code></div>
-    </div>
-    <div class="flow-item">
-      <div class="fi-label">API fixture</div>
-      <div class="fi-title">postsApi / healthApi</div>
-      <div class="fi-desc">Scoped <code>PostsApi</code> / <code>HealthApi</code> instances backed by <code>ApiClient</code></div>
-    </div>
-    <div class="flow-item">
-      <div class="fi-label">UI fixture</div>
-      <div class="fi-title">mockApi</div>
-      <div class="fi-desc"><code>page.route()</code> stub helper; returns an <code>unroute()</code> fn for early cleanup</div>
+      <div class="fi-desc">On failure: captures screenshot + video + trace and attaches to Allure (UI tests only)</div>
     </div>
   </div>
 
@@ -525,7 +530,7 @@
       <text x="702" y="119" fill="#bc8cff" font-size="10.5" font-weight="600">.github/workflows/</text>
       <text x="712" y="135" fill="#8b949e" font-size="9.5">tests.yml</text>
       <text x="754" y="135" fill="#484f58" font-size="8.5">CI pipeline</text>
-      <text x="712" y="151" fill="#484f58" font-size="8.5">test + deploy-pages jobs</text>
+      <text x="712" y="151" fill="#484f58" font-size="8.5">5-job parallel pipeline</text>
       <!-- root files -->
       <rect x="692" y="169" width="194" height="190" rx="6" fill="#1a1030" stroke="#bc8cff48" stroke-width="1"/>
       <text x="702" y="185" fill="#bc8cff" font-size="10" font-weight="600">Root config files</text>
@@ -544,6 +549,7 @@
   <div class="tree">
 <span class="dir">ModelioAutomationTest/</span>
 ├── <span class="dir">tests/</span>
+│   ├── <span class="file">constants.ts</span>         <span class="note">← shared test data (products, payloads, credentials)</span>
 │   ├── <span class="dir">ui/</span>
 │   │   ├── <span class="file">login.spec.ts</span>        <span class="note">← happy path + invalid credentials</span>
 │   │   ├── <span class="file">cart.spec.ts</span>         <span class="note">← add items, badge count</span>
@@ -574,15 +580,19 @@
 │   │   ├── <span class="file">CartWorkflow.ts</span>
 │   │   └── <span class="file">CheckoutWorkflow.ts</span>
 │   │
-│   ├── <span class="dir">fixtures/</span>
-│   │   └── <span class="file">index.ts</span>             <span class="note">← test.extend() — all fixtures</span>
+│   ├── <span class="dir">fixtures/</span>                <span class="note">← composable fixture chain</span>
+│   │   ├── <span class="file">pages.ts</span>             <span class="note">← page object fixtures</span>
+│   │   ├── <span class="file">api.ts</span>               <span class="note">← apiClient, postsApi, healthApi, mockApi</span>
+│   │   ├── <span class="file">auth.ts</span>              <span class="note">← workflows + authenticatedInventory</span>
+│   │   ├── <span class="file">auto.ts</span>              <span class="note">← _serverLinks, _failureCapture (auto)</span>
+│   │   └── <span class="file">index.ts</span>             <span class="note">← re-exports composed test + AppFixtures type</span>
 │   │
 │   ├── <span class="dir">reporters/</span>
 │   │   └── <span class="file">SummaryReporter.ts</span>   <span class="note">← CLI summary table</span>
 │   │
 │   └── <span class="dir">utils/</span>
 │       ├── <span class="file">allure.ts</span>            <span class="note">← allureStep / allureLink / allureAttachment</span>
-│       ├── <span class="file">config.ts</span>            <span class="note">← all env vars in one place</span>
+│       ├── <span class="file">config.ts</span>            <span class="note">← env vars with defaults from config.json</span>
 │       ├── <span class="file">logger.ts</span>            <span class="note">← console + daily rotating log file</span>
 │       └── <span class="file">global-setup.ts</span>      <span class="note">← server links banner</span>
 │
@@ -607,7 +617,9 @@
 ├── <span class="file">playwright.config.ts</span>
 ├── <span class="file">docker-compose.yml</span>   <span class="note">← health-api + prometheus + grafana + tests</span>
 ├── <span class="file">Dockerfile</span>           <span class="note">← Playwright test image (with Java for Allure)</span>
-├── <span class="file">run.sh</span>               <span class="note">← ./run.sh [all|ui|api|report|clean]</span>
+├── <span class="file">run.sh</span>               <span class="note">← ./run.sh [all|ui|api|report|clean]; kills stale port 5050</span>
+├── <span class="file">config.json</span>          <span class="note">← default values for all env vars</span>
+├── <span class="file">.claudeignore</span>        <span class="note">← excludes node_modules, test output, binaries from Claude context</span>
 └── <span class="file">allure-categories.json</span>
   </div>
 
@@ -617,14 +629,13 @@
   <h3>1 — Test Layer (<code>tests/</code>)</h3>
   <p>Thin specs: each test imports from <code>src/fixtures</code>, calls high-level methods, and wraps steps in <code>allureStep()</code>. No page/API implementation detail leaks in.</p>
 
-  <h3>2 — Fixture Layer (<code>src/fixtures/index.ts</code>)</h3>
-  <p>Single <code>test.extend()</code> that wires all pages, API services, workflows, and auto-fixtures together. Provides:</p>
+  <h3>2 — Fixture Layer (<code>src/fixtures/</code>)</h3>
+  <p>Split into four chained files — each calls <code>test.extend()</code> on the previous — then re-exported from <code>index.ts</code>:</p>
   <ul>
-    <li><code>authenticatedInventory</code> — logs in and returns an <code>InventoryPage</code></li>
-    <li><code>postsApi</code> / <code>healthApi</code> — API service instances scoped per test</li>
-    <li><code>mockApi</code> — <code>page.route()</code> stub helper with automatic teardown</li>
-    <li><code>_failureCapture</code> (auto) — attaches screenshot, video, trace to Allure on failure</li>
-    <li><code>_serverLinks</code> (auto) — adds Allure links to every test result</li>
+    <li><code>pages.ts</code> — page object fixtures (loginPage, inventoryPage, cartPage, checkoutPage)</li>
+    <li><code>api.ts</code> — apiClient, postsApi, healthApi, mockApi (route stub + auto-teardown)</li>
+    <li><code>auth.ts</code> — workflows fixture + <code>authenticatedInventory</code> (full login per test)</li>
+    <li><code>auto.ts</code> — <code>_serverLinks</code> and <code>_failureCapture</code> auto-fixtures (screenshot, video, trace)</li>
   </ul>
 
   <h3>3 — Page Object Layer (<code>src/pages/</code>)</h3>
@@ -644,7 +655,7 @@
     </div>
     <div class="card">
       <div class="card-title">config.ts</div>
-      <div class="card-desc">Single source of truth for env vars. <code>requireEnv(key, fallback)</code> treats empty strings as missing — critical for GitHub secrets.</div>
+      <div class="card-desc">Reads defaults from <code>config.json</code>; env vars override at runtime. <code>requireEnv(key, fallback)</code> treats empty strings as missing — critical for GitHub secrets.</div>
     </div>
     <div class="card">
       <div class="card-title">logger.ts</div>
@@ -710,9 +721,14 @@
 
   <!-- ── CI/CD ── -->
   <h2 id="ci">CI / CD Pipeline</h2>
+  <p style="color:#8b949e;font-size:0.88rem;margin-bottom:1rem">
+    Five jobs run in two parallel waves. <code>typecheck</code> and <code>test</code> start simultaneously;
+    <code>report</code> and <code>summary</code> fan out the moment <code>test</code> finishes.
+    Permissions are scoped per job — only <code>deploy-pages</code> holds <code>pages: write</code>.
+  </p>
 
   <div class="arch-svg-wrap">
-    <svg viewBox="0 0 840 450" xmlns="http://www.w3.org/2000/svg"
+    <svg viewBox="0 0 900 540" xmlns="http://www.w3.org/2000/svg"
          font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif">
       <defs>
         <marker id="ci-ah" viewBox="0 0 10 10" refX="8" refY="5"
@@ -722,102 +738,128 @@
       </defs>
 
       <!-- ═══ TRIGGER ═══ -->
-      <rect x="5" y="5" width="830" height="42" rx="8" fill="#161b22" stroke="#484f58" stroke-width="1.5"/>
-      <text x="420" y="19" text-anchor="middle" fill="#484f58" font-size="9" font-weight="700" letter-spacing="0.08em">TRIGGER</text>
-      <text x="420" y="36" text-anchor="middle" fill="#f0f6fc" font-size="12" font-weight="600">on: push / pull_request → main  ·  ubuntu-latest  ·  timeout: 30 min</text>
+      <rect x="5" y="5" width="890" height="42" rx="8" fill="#161b22" stroke="#484f58" stroke-width="1.5"/>
+      <text x="450" y="19" text-anchor="middle" fill="#484f58" font-size="9" font-weight="700" letter-spacing="0.08em">TRIGGER</text>
+      <text x="450" y="36" text-anchor="middle" fill="#f0f6fc" font-size="12" font-weight="600">on: push / pull_request → main  ·  ubuntu-latest</text>
 
-      <!-- arrow trigger → test job -->
-      <line x1="420" y1="47" x2="420" y2="62" stroke="#484f58" stroke-width="1.5" marker-end="url(#ci-ah)"/>
+      <!-- Fork: trigger → typecheck (left) and test (right) simultaneously -->
+      <line x1="450" y1="47" x2="450" y2="58" stroke="#484f58" stroke-width="1.5"/>
+      <line x1="205" y1="58" x2="660" y2="58" stroke="#484f58" stroke-width="1.5"/>
+      <line x1="205" y1="58" x2="205" y2="70" stroke="#484f58" stroke-width="1.5" marker-end="url(#ci-ah)"/>
+      <line x1="660" y1="58" x2="660" y2="70" stroke="#484f58" stroke-width="1.5" marker-end="url(#ci-ah)"/>
+      <text x="450" y="56" text-anchor="middle" fill="#484f58" font-size="8" font-style="italic">both start immediately</text>
 
-      <!-- ═══ JOB: test ═══ -->
-      <rect x="5" y="62" width="830" height="300" rx="8" fill="#0d1a12" stroke="#3fb950" stroke-width="1.5"/>
-      <text x="16" y="79" fill="#3fb950" font-size="10" font-weight="700" letter-spacing="0.05em">JOB: test</text>
-      <line x1="15" y1="85" x2="825" y2="85" stroke="#3fb95030" stroke-width="1"/>
+      <!-- ═══ JOB: typecheck (left, purple) ═══ -->
+      <rect x="5" y="70" width="400" height="170" rx="8" fill="#120c20" stroke="#bc8cff" stroke-width="1.5"/>
+      <text x="16" y="87" fill="#bc8cff" font-size="10" font-weight="700" letter-spacing="0.05em">JOB: typecheck</text>
+      <text x="205" y="103" text-anchor="middle" fill="#484f58" font-size="8.5">permissions: contents: read</text>
+      <line x1="15" y1="108" x2="395" y2="108" stroke="#bc8cff30" stroke-width="1"/>
+      <text x="25" y="124" fill="#8b949e" font-size="9">actions/checkout@v4</text>
+      <text x="25" y="140" fill="#8b949e" font-size="9">setup-node(20)  ·  npm ci</text>
+      <text x="25" y="156" fill="#8b949e" font-size="9">tsc --noEmit</text>
+      <text x="205" y="228" text-anchor="middle" fill="#bc8cff55" font-size="8" font-style="italic">~1 min · no downstream dependency</text>
 
-      <!-- ─── Sub-col 1: Setup (amber) x=14 w=248 ─── -->
-      <rect x="14" y="93" width="248" height="185" rx="6" fill="#26200c" stroke="#d2992250" stroke-width="1"/>
-      <text x="138" y="109" text-anchor="middle" fill="#d29922" font-size="9.5" font-weight="700">① Setup &amp; Services</text>
-      <line x1="24" y1="114" x2="252" y2="114" stroke="#d2992230" stroke-width="0.8"/>
-      <text x="24" y="129" fill="#8b949e" font-size="9">actions/checkout@v4</text>
-      <text x="24" y="145" fill="#8b949e" font-size="9">setup-node(20)  ·  npm ci</text>
-      <text x="24" y="161" fill="#8b949e" font-size="9">setup-java(17)  <tspan fill="#484f58" font-size="8">← Allure JRE</tspan></text>
-      <text x="24" y="177" fill="#8b949e" font-size="9">setup-python(3.12)  ·  pip install</text>
-      <text x="24" y="193" fill="#8b949e" font-size="9">uvicorn health_api.main:app :8000 &amp;</text>
-      <text x="24" y="209" fill="#8b949e" font-size="9">wait for /health/self</text>
-      <text x="24" y="225" fill="#484f58" font-size="8.5">tsc --noEmit  ·  playwright install</text>
-      <text x="24" y="268" fill="#3fb95066" font-size="8">chromium + system deps</text>
+      <!-- ═══ JOB: test (right, green) ═══ -->
+      <rect x="415" y="70" width="480" height="170" rx="8" fill="#0d1a12" stroke="#3fb950" stroke-width="1.5"/>
+      <text x="426" y="87" fill="#3fb950" font-size="10" font-weight="700" letter-spacing="0.05em">JOB: test</text>
+      <text x="655" y="103" text-anchor="middle" fill="#484f58" font-size="8.5">permissions: contents: read</text>
+      <line x1="425" y1="108" x2="885" y2="108" stroke="#3fb95030" stroke-width="1"/>
+      <text x="425" y="124" fill="#8b949e" font-size="9">checkout  ·  setup-node(20)  ·  npm ci</text>
+      <text x="425" y="140" fill="#8b949e" font-size="9">setup-python(3.12)  ·  pip install  ·  uvicorn :8000 &amp;</text>
+      <text x="425" y="156" fill="#8b949e" font-size="9">playwright install --with-deps chromium</text>
+      <text x="425" y="172" fill="#8b949e" font-size="9">npx playwright test --workers=4  <tspan fill="#484f58" font-size="8">(continue-on-error)</tspan></text>
+      <text x="425" y="188" fill="#8b949e" font-size="9">upload: allure-results  ·  playwright-report  ·  test-results</text>
+      <text x="425" y="208" fill="#d29922" font-size="8.5">check test outcomes → exit 1 if failed</text>
 
-      <!-- ─── Sub-col 2: Tests (blue) x=272 w=268 ─── -->
-      <rect x="272" y="93" width="268" height="185" rx="6" fill="#0d1e38" stroke="#58a6ff50" stroke-width="1"/>
-      <text x="406" y="109" text-anchor="middle" fill="#58a6ff" font-size="9.5" font-weight="700">② Run Tests</text>
-      <line x1="282" y1="114" x2="530" y2="114" stroke="#58a6ff30" stroke-width="0.8"/>
-      <text x="282" y="129" fill="#8b949e" font-size="9">playwright test --workers=4</text>
-      <text x="282" y="145" fill="#484f58" font-size="8.5">  continue-on-error: true</text>
-      <text x="282" y="163" fill="#8b949e" font-size="9">download prev allure-report artifact</text>
-      <text x="282" y="179" fill="#484f58" font-size="8.5">  (history/ for trend graph)</text>
-      <text x="282" y="197" fill="#8b949e" font-size="9">copy history/ → allure-results/</text>
-      <text x="282" y="215" fill="#8b949e" font-size="9">allure generate → allure-report/</text>
-      <text x="282" y="231" fill="#484f58" font-size="8.5">  3 projects: chromium · api · health</text>
-      <text x="282" y="249" fill="#58a6ff66" font-size="8">retries: 2 on CI, 1 local</text>
+      <!-- Fork: test → report (left) and summary (right) -->
+      <line x1="655" y1="240" x2="655" y2="252" stroke="#484f58" stroke-width="1.5"/>
+      <line x1="205" y1="252" x2="655" y2="252" stroke="#484f58" stroke-width="1.5"/>
+      <line x1="205" y1="252" x2="205" y2="264" stroke="#484f58" stroke-width="1.5" marker-end="url(#ci-ah)"/>
+      <line x1="655" y1="252" x2="655" y2="264" stroke="#484f58" stroke-width="1.5" marker-end="url(#ci-ah)"/>
+      <text x="450" y="250" text-anchor="middle" fill="#484f58" font-size="8" font-style="italic">if: always()  ·  both start immediately after test</text>
 
-      <!-- ─── Sub-col 3: Reporting (purple) x=550 w=279 ─── -->
-      <rect x="550" y="93" width="279" height="185" rx="6" fill="#120c20" stroke="#bc8cff50" stroke-width="1"/>
-      <text x="689" y="109" text-anchor="middle" fill="#bc8cff" font-size="9.5" font-weight="700">③ Reporting &amp; Publish</text>
-      <line x1="560" y1="114" x2="819" y2="114" stroke="#bc8cff30" stroke-width="0.8"/>
-      <text x="560" y="129" fill="#8b949e" font-size="9">step summary: results table</text>
-      <text x="560" y="145" fill="#8b949e" font-size="9">step summary: server links</text>
-      <text x="560" y="161" fill="#8b949e" font-size="9">upload: allure-report (artifact)</text>
-      <text x="560" y="177" fill="#8b949e" font-size="9">upload: playwright-report (artifact)</text>
-      <text x="560" y="193" fill="#8b949e" font-size="9">upload: allure-results · test-results</text>
-      <text x="560" y="209" fill="#8b949e" font-size="9">touch .nojekyll  ← prevent Jekyll strip</text>
-      <text x="560" y="225" fill="#8b949e" font-size="9">upload-pages-artifact</text>
-      <text x="560" y="249" fill="#bc8cff66" font-size="8">artifacts retained 7–14 days</text>
+      <!-- ═══ JOB: report (left, amber) ═══ -->
+      <rect x="5" y="264" width="400" height="195" rx="8" fill="#1a1500" stroke="#d29922" stroke-width="1.5"/>
+      <text x="16" y="281" fill="#d29922" font-size="10" font-weight="700" letter-spacing="0.05em">JOB: report</text>
+      <text x="205" y="297" text-anchor="middle" fill="#484f58" font-size="8.5">permissions: contents: read</text>
+      <line x1="15" y1="302" x2="395" y2="302" stroke="#d2992230" stroke-width="1"/>
+      <text x="25" y="318" fill="#8b949e" font-size="9">checkout  ·  setup-node(20)  ·  npm ci</text>
+      <text x="25" y="334" fill="#8b949e" font-size="9">setup-java(17)  <tspan fill="#484f58" font-size="8">← Allure requires JRE</tspan></text>
+      <text x="25" y="350" fill="#8b949e" font-size="9">download allure-results artifact</text>
+      <text x="25" y="366" fill="#8b949e" font-size="9">cache/restore allure-history/  <tspan fill="#484f58" font-size="8">(trend graph)</tspan></text>
+      <text x="25" y="382" fill="#8b949e" font-size="9">copy history → allure-results/history/</text>
+      <text x="25" y="398" fill="#8b949e" font-size="9">allure generate → allure-report/</text>
+      <text x="25" y="414" fill="#8b949e" font-size="9">cache/save allure-history/  ·  touch .nojekyll</text>
+      <text x="25" y="430" fill="#8b949e" font-size="9">upload: allure-report  ·  upload-pages-artifact</text>
 
-      <!-- ─── Check outcomes bar ─── -->
-      <rect x="14" y="288" width="815" height="38" rx="5" fill="#161b22" stroke="#30363d" stroke-width="1"/>
-      <text x="421" y="304" text-anchor="middle" fill="#8b949e" font-size="9" font-weight="700">CHECK TEST OUTCOMES</text>
-      <text x="421" y="319" text-anchor="middle" fill="#484f58" font-size="8.5">exit 1 if any project failed  ·  ✅ all passed → proceed to deploy</text>
+      <!-- ═══ JOB: summary (right, blue) ═══ -->
+      <rect x="415" y="264" width="480" height="195" rx="8" fill="#0d1e38" stroke="#58a6ff" stroke-width="1.5"/>
+      <text x="426" y="281" fill="#58a6ff" font-size="10" font-weight="700" letter-spacing="0.05em">JOB: summary</text>
+      <text x="655" y="297" text-anchor="middle" fill="#484f58" font-size="8.5">permissions: contents: read</text>
+      <line x1="425" y1="302" x2="885" y2="302" stroke="#58a6ff30" stroke-width="1"/>
+      <text x="425" y="318" fill="#8b949e" font-size="9">checkout  ·  setup-node(20)  ·  npm ci</text>
+      <text x="425" y="334" fill="#8b949e" font-size="9">download test-results artifact</text>
+      <text x="425" y="350" fill="#8b949e" font-size="9">node summary script → GITHUB_STEP_SUMMARY</text>
+      <text x="425" y="366" fill="#484f58" font-size="8.5">  total / passed / failed / skipped / flaky table</text>
+      <text x="425" y="382" fill="#8b949e" font-size="9">write server links to step summary</text>
+      <text x="655" y="448" text-anchor="middle" fill="#58a6ff55" font-size="8" font-style="italic">runs in parallel with report</text>
 
-      <!-- arrow test → deploy (with condition) -->
-      <line x1="420" y1="362" x2="420" y2="377" stroke="#484f58" stroke-width="1.5" marker-end="url(#ci-ah)"/>
-      <text x="432" y="372" fill="#484f58" font-size="8.5" font-style="italic">if: github.ref == 'refs/heads/main'</text>
+      <!-- Arrow: report → deploy-pages -->
+      <line x1="205" y1="459" x2="205" y2="470" stroke="#484f58" stroke-width="1.5"/>
+      <line x1="205" y1="470" x2="450" y2="470" stroke="#484f58" stroke-width="1.5"/>
+      <line x1="450" y1="470" x2="450" y2="482" stroke="#484f58" stroke-width="1.5" marker-end="url(#ci-ah)"/>
+      <text x="330" y="468" text-anchor="middle" fill="#484f58" font-size="8" font-style="italic">needs.report.result == 'success' &amp;&amp; main</text>
 
       <!-- ═══ JOB: deploy-pages ═══ -->
-      <rect x="5" y="377" width="830" height="48" rx="8" fill="#0c1628" stroke="#58a6ff" stroke-width="1.5"/>
-      <text x="16" y="396" fill="#58a6ff" font-size="10" font-weight="700" letter-spacing="0.05em">JOB: deploy-pages</text>
-      <text x="420" y="396" text-anchor="middle" fill="#f0f6fc" font-size="10" font-weight="500">actions/deploy-pages@v4</text>
-      <text x="420" y="413" text-anchor="middle" fill="#8b949e" font-size="9">→ https://amielnoy.github.io/ModelioAutomationTest/</text>
+      <rect x="5" y="482" width="890" height="52" rx="8" fill="#0c1628" stroke="#58a6ff" stroke-width="1.5"/>
+      <text x="16" y="501" fill="#58a6ff" font-size="10" font-weight="700" letter-spacing="0.05em">JOB: deploy-pages</text>
+      <text x="450" y="501" text-anchor="middle" fill="#f0f6fc" font-size="10" font-weight="500">actions/deploy-pages@v4</text>
+      <text x="450" y="518" text-anchor="middle" fill="#8b949e" font-size="9">permissions: pages: write  ·  id-token: write  (scoped to this job only)</text>
+      <text x="450" y="530" text-anchor="middle" fill="#484f58" font-size="8.5">→ https://amielnoy.github.io/ModelioAutomationTest/</text>
     </svg>
   </div>
 
   <div class="diagram">
 push to main
     │
-    ▼
-<span class="green">┌─ job: test ─────────────────────────────────────────────────────────┐</span>
-│  checkout → setup-node(20) → npm ci                                 │
-│  → setup-java(17) [Allure requires JRE]                             │
-│  → setup-python(3.12) → pip install health_api/requirements.txt     │
-│  → uvicorn health_api.main:app --port 8000 &amp;                        │
-│  → wait for /health/self                                            │
-│  → tsc --noEmit                                                     │
-│  → playwright install --with-deps chromium                          │
-│  → npx playwright test --workers=4         <span class="yellow">(continue-on-error)</span>       │
-│  → restore Allure history artifact                                  │
-│  → npx allure generate → allure-report/                             │
-│  → node summary script → GITHUB_STEP_SUMMARY                        │
-│  → upload: playwright-report, allure-report, allure-results,        │
-│            test-results                                             │
-│  → touch allure-report/.nojekyll  <span class="dim">(prevents Jekyll stripping files)</span>│
-│  → upload-pages-artifact                                            │
-│  → check test outcomes (fail job if tests failed)                   │
-<span class="green">└─────────────────────────────────────────────────────────────────────┘</span>
-    │
-    ▼ (if main branch)
-<span class="purple">┌─ job: deploy-pages ─────────────────────────────────────────────────┐</span>
-│  actions/deploy-pages → GitHub Pages                                │
-│  → https://amielnoy.github.io/ModelioAutomationTest/               │
-<span class="purple">└─────────────────────────────────────────────────────────────────────┘</span>
+    ├──────────────────────────────────────────┐
+    ▼                                          ▼
+<span class="purple">┌─ job: typecheck ────────────────────┐</span>  <span class="green">┌─ job: test ─────────────────────────────────┐</span>
+<span class="purple">│  setup-node(20) · npm ci            │</span>  <span class="green">│  setup-node(20) · npm ci                    │</span>
+<span class="purple">│  tsc --noEmit                       │</span>  <span class="green">│  setup-python(3.12) · pip install           │</span>
+<span class="purple">│                                     │</span>  <span class="green">│  uvicorn health_api.main:app :8000 &amp;        │</span>
+<span class="purple">│  perm: contents: read               │</span>  <span class="green">│  playwright install --with-deps chromium    │</span>
+<span class="purple">│  ~1 min · no downstream deps        │</span>  <span class="green">│  npx playwright test --workers=4            │</span>
+<span class="purple">└─────────────────────────────────────┘</span>  <span class="green">│    continue-on-error: true                  │</span>
+                                          <span class="green">│  upload: allure-results                     │</span>
+                                          <span class="green">│  upload: playwright-report · test-results   │</span>
+                                          <span class="green">│  check test outcomes (exit 1 if failed)     │</span>
+                                          <span class="green">│  perm: contents: read                       │</span>
+                                          <span class="green">└────────────────┬────────────────────────────┘</span>
+                                                           │ if: always()
+                                               ┌───────────┴────────────┐
+                                               ▼                        ▼
+<span class="yellow">┌─ job: report ─────────────────────────┐</span>  <span class="highlight">┌─ job: summary ──────────────────────────┐</span>
+<span class="yellow">│  setup-node · npm ci                  │</span>  <span class="highlight">│  setup-node · npm ci                    │</span>
+<span class="yellow">│  setup-java(17)  ← Allure JRE         │</span>  <span class="highlight">│  download test-results artifact         │</span>
+<span class="yellow">│  download allure-results artifact     │</span>  <span class="highlight">│  node summary script                    │</span>
+<span class="yellow">│  cache/restore allure-history/        │</span>  <span class="highlight">│    → GITHUB_STEP_SUMMARY                │</span>
+<span class="yellow">│  copy history → allure-results/       │</span>  <span class="highlight">│  write server links                     │</span>
+<span class="yellow">│  allure generate → allure-report/     │</span>  <span class="highlight">│  perm: contents: read                   │</span>
+<span class="yellow">│  cache/save allure-history/           │</span>  <span class="highlight">└─────────────────────────────────────────┘</span>
+<span class="yellow">│  touch .nojekyll                      │</span>
+<span class="yellow">│  upload: allure-report                │</span>
+<span class="yellow">│  upload-pages-artifact@v4            │</span>
+<span class="yellow">│  perm: contents: read                 │</span>
+<span class="yellow">└──────────────┬────────────────────────┘</span>
+               │ needs.report.result == 'success'
+               │ &amp;&amp; github.ref == 'refs/heads/main'
+               ▼
+<span class="highlight">┌─ job: deploy-pages ─────────────────────────────────────────────────┐</span>
+<span class="highlight">│  actions/deploy-pages@v4                                            │</span>
+<span class="highlight">│  perm: pages: write · id-token: write  (this job only)             │</span>
+<span class="highlight">│  → https://amielnoy.github.io/ModelioAutomationTest/               │</span>
+<span class="highlight">└─────────────────────────────────────────────────────────────────────┘</span>
   </div>
 
   <!-- ── REPORTING ── -->
@@ -867,6 +909,35 @@ push to main
     </div>
   </div>
 
+  <!-- ── SOLID ── -->
+  <h2>Clean Code &amp; SOLID</h2>
+  <table>
+    <thead>
+      <tr><th>Principle</th><th>How it is applied</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>S — Single Responsibility</strong></td><td><code>ApiService</code> (HTTP delegation) lives in its own <code>ApiService.ts</code>. <code>PostsApi</code> and <code>HealthApi</code> define endpoint methods only. Each fixture file owns one fixture group. <code>BasePage</code> holds navigation helpers only.</td></tr>
+      <tr><td><strong>O — Open/Closed</strong></td><td><code>ApiService</code> is abstract — new API surfaces extend it without modification. Fixture chain (<code>pages → api → auth → auto</code>) extends each layer without touching prior files. <code>UI_PROJECTS</code> set in <code>auto.ts</code> means adding a new browser project needs no fixture edit.</td></tr>
+      <tr><td><strong>L — Liskov Substitution</strong></td><td><code>PostsApi</code> and <code>HealthApi</code> are substitutable for <code>ApiService</code>. All page objects are substitutable for <code>BasePage</code>. No override breaks the base contract.</td></tr>
+      <tr><td><strong>I — Interface Segregation</strong></td><td><code>RequestOptions</code> is fully optional — callers set only what they need. <code>CustomerInfo</code>, <code>Post</code>, <code>CreatePostPayload</code>, <code>UpdatePostPayload</code> are minimal focused interfaces with no fat surface.</td></tr>
+      <tr><td><strong>D — Dependency Inversion</strong></td><td><code>ApiClient</code> receives <code>baseUrl</code> and <code>timeout</code> via constructor injection. Page objects depend on Playwright's <code>Page</code> abstraction. Fixtures inject concrete instances; tests never call <code>new</code>.</td></tr>
+    </tbody>
+  </table>
+
+  <h3 style="margin-bottom:0.75rem">Clean code fixes applied</h3>
+  <table>
+    <thead>
+      <tr><th>Issue</th><th>Fix</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>ApiService</code> defined in <code>PostsApi.ts</code></td><td>Extracted to <code>ApiService.ts</code>; <code>HealthApi</code> no longer imports its base from an unrelated file</td></tr>
+      <tr><td>Magic numbers <code>3</code> (retries) and <code>200</code> (backoff ms)</td><td>Named constants <code>DEFAULT_RETRIES</code> and <code>RETRY_BACKOFF_MS</code> in <code>ApiClient.ts</code></td></tr>
+      <tr><td><code>as never</code> casts on <code>page.route()</code> / <code>page.unroute()</code></td><td><code>RouteHandler</code> type alias introduced; casts eliminated</td></tr>
+      <tr><td><code>'chromium'</code> hardcoded in <code>_failureCapture</code></td><td>Replaced with <code>UI_PROJECTS = new Set(['chromium','firefox','webkit'])</code></td></tr>
+      <tr><td><code>'video/webm' as never</code></td><td>Removed; <code>allureAttachment</code> accepts the MIME string directly</td></tr>
+    </tbody>
+  </table>
+
   <!-- ── KEY DECISIONS ── -->
   <h2>Key Design Decisions</h2>
   <table>
@@ -881,7 +952,12 @@ push to main
       <tr><td>Custom <code>SummaryReporter</code></td><td><code>globalTeardown</code> stdout is swallowed by Playwright's subprocess model; a custom reporter's <code>onEnd</code> runs in the main process.</td></tr>
       <tr><td>Localhost links skipped in CI</td><td>Grafana/FastAPI/Swagger run only via Docker locally; embedding <code>localhost</code> URLs in the GitHub Pages Allure report would always 404.</td></tr>
       <tr><td><code>fullyParallel: true</code> + 4 workers</td><td>All 18 tests complete in ~5 s locally and in CI; no shared browser state between tests.</td></tr>
-      <tr><td>Allure history via artifact download</td><td><code>dawidd6/action-download-artifact</code> fetches the previous run's <code>history/</code> folder so the trend graph builds up across runs.</td></tr>
+      <tr><td>Allure history via <code>actions/cache</code></td><td>Replaces <code>dawidd6/action-download-artifact</code> (needed a token, failed silently). Cache restore/save uses key prefix <code>allure-history-</code> — always finds the most recent entry across runs, no auth required.</td></tr>
+      <tr><td><code>FORCE_JAVASCRIPT_ACTIONS_TO_NODE24</code></td><td>Workflow-level env var opts all GitHub Actions into the Node 24 runtime now, silencing deprecation warnings before the forced migration in September 2026.</td></tr>
+      <tr><td>Fixture layer split into four files</td><td><code>pages.ts → api.ts → auth.ts → auto.ts</code> via chained <code>test.extend()</code>. Each file owns one responsibility; inter-fixture dependencies resolve because Playwright sees all fixtures in the composed type.</td></tr>
+      <tr><td><code>last_over_time(...[3h])</code> in Grafana stat panels</td><td>Bare gauge queries return 0 after ~5 min of Prometheus staleness. Wrapping in <code>last_over_time</code> looks back across the full dashboard window so stat panels show the most recent test run's numbers.</td></tr>
+      <tr><td><code>tests/constants.ts</code></td><td>Centralises all inline test data (product names, sort keys, credentials, payloads, IDs). A single change here propagates to every spec that references the constant.</td></tr>
+      <tr><td>5-job parallel CI pipeline</td><td><code>typecheck</code> and <code>test</code> run simultaneously — no tsc gate before tests. <code>report</code> and <code>summary</code> fan out in parallel the moment <code>test</code> completes; Java is installed only in <code>report</code>, keeping <code>test</code> lean. <code>pages: write</code> and <code>id-token: write</code> are scoped exclusively to <code>deploy-pages</code> — the minimum surface needed for a Pages deployment.</td></tr>
     </tbody>
   </table>
 

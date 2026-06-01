@@ -1,55 +1,143 @@
 # Design Rationale
 
-## Language and framework choice
+> The reasoning behind every significant decision in this automation framework.
 
-**TypeScript + Playwright Test.**
+---
 
-Playwright was the obvious choice over Selenium for this assignment. It ships with a built-in test runner, assertion library, trace viewer, HTML reporter, and a first-class API testing layer — all from a single install. Selenium requires assembling five or six separate libraries to reach the same surface area, and its synchronous WebDriver protocol means every interaction crosses a network hop to a driver binary. Playwright's CDP/BiDi channels run in-process and include auto-waiting on every action, which eliminates an entire category of flakiness before I write a single line of test code.
+## 1 · Language & Framework
 
-I would still choose Selenium if the organisation already runs a mature Selenium Grid, needs IE11 or legacy browser support, or operates in a Java shop where the REST Assured + JUnit 5 ecosystem is the firm standard. Neither is wrong; the question is always which tool your team can maintain.
+**Stack:** TypeScript · Playwright · FastAPI · Allure 3 · GitHub Actions
 
-TypeScript over plain JavaScript because the type system catches misrouted locators, schema mismatches, and typos at compile time — before CI ever starts. It also makes the API layer self-documenting (the `Post` interface is the contract, not a comment).
+### Why Playwright over Selenium?
 
-## Anti-flakiness strategy
+Playwright ships with a built-in test runner, assertion library, trace viewer, HTML reporter, and a first-class API testing layer — all from a single install. Selenium requires assembling five or six separate libraries to reach the same surface area, and its synchronous WebDriver protocol means every interaction crosses a network hop to a driver binary. Playwright's CDP/BiDi channels run in-process and include auto-waiting on every action, eliminating an entire category of flakiness before a single line of test code is written.
 
-Four concrete techniques, applied in layers:
+> **When Selenium is the right call:** the organisation already runs a mature Selenium Grid, needs IE11 or legacy browser support, or operates in a Java shop where REST Assured + JUnit 5 is the firm standard. Neither tool is wrong — the question is always which your team can maintain.
 
-1. **Playwright auto-wait on every action.** `click()`, `fill()`, `selectOption()` all wait for the target to be attached, visible, enabled, and stable before acting. No explicit waits are needed for 90% of interactions.
+### Why TypeScript?
 
-2. **Condition-based explicit waits where needed.** The `waitForVisible()` helper in `BasePage` calls `locator.waitFor({ state: 'visible' })` — a pure condition check, never a fixed sleep. The same pattern applies to `expectOnInventoryPage()` which waits for the inventory list before asserting.
+The type system catches misrouted locators, schema mismatches, and typos at compile time — before CI ever starts. The `Post` interface is the contract; it documents the API without a comment.
 
-3. **data-test attribute selectors.** Swag Labs exposes `data-test` on every interactive element. `getByTestId()` binds to structural intent, not visual layout — a CSS class rename or style refactor cannot break these selectors.
+---
 
-4. **Full browser-context isolation per test.** Playwright creates a fresh browser context (cookies, local storage, session storage) for every test by default. There is no shared mutable session state between tests, so parallel execution cannot produce interference.
+## 2 · Anti-flakiness Strategy
 
-At scale (1000+ tests) I would add: flaky test quarantine via a dedicated tag and separate retry pipeline; test result tracking in a time-series database to surface intermittents statistically; server-side request mocking (Playwright's `route()`) for tests that touch unstable third-party APIs; and a pre-merge check that blocks PRs if a test is re-introduced with a known-flaky pattern (sleep, implicit wait).
+Four techniques, applied in layers:
 
-## Parallelism and isolation
+1. **Playwright auto-wait on every action.**  
+   `click()`, `fill()`, `selectOption()` all wait for the target to be attached, visible, enabled, and stable before acting. No explicit waits needed for 90 % of interactions.
 
-Tests are isolated at the browser-context level. Playwright allocates a new context per test, so parallel workers never share cookies, storage, or authenticated sessions. The `authenticatedInventory` fixture performs a full login inside each test's context — there is no shared login state to corrupt.
+2. **Condition-based explicit waits where needed.**  
+   The `waitForVisible()` helper in `BasePage` calls `locator.waitFor({ state: 'visible' })` — a pure condition check, never a fixed sleep. `expectOnInventoryPage()` waits for the inventory list before asserting.
 
-The first thing that breaks when parallelism is turned up aggressively is the target server's rate limiter. JSONPlaceholder is public and rate-limits at roughly 100 req/min. Swag Labs is single-tenant demo infrastructure; in theory it can handle any load, but a very high worker count could produce network timeouts that look like flakiness. The `retries: 2` in `playwright.config.ts` absorbs transient network hiccups in CI without hiding genuine failures.
+3. **`data-test` attribute selectors.**  
+   SauceDemo exposes `data-test` on every interactive element. `getByTestId()` binds to structural intent, not visual layout — a CSS class rename or style refactor cannot break these selectors.
 
-Run UI tests in parallel with 4 workers:
+4. **Full browser-context isolation per test.**  
+   Playwright creates a fresh browser context (cookies, local storage, session storage) for every test by default. No shared mutable session state between tests — parallel execution cannot produce interference.
 
-```
-npx playwright test --project=chromium tests/ui --workers=4
-```
+> **At scale (1 000+ tests):** flaky test quarantine via a dedicated `@quarantine` tag + separate retry pipeline; test result tracking in a time-series DB to surface intermittents statistically; `page.route()` mocking for tests that touch unstable third-party APIs; a pre-merge check that blocks PRs re-introducing known-flaky patterns (sleep, implicit wait).
 
-## Reporting and triage
+---
+
+## 3 · Parallelism & Isolation
+
+Tests are isolated at the browser-context level. Playwright allocates a new context per test, so parallel workers never share cookies, storage, or authenticated sessions.
+
+The first thing that breaks when parallelism is turned up aggressively is the target server's rate limiter. JSONPlaceholder is public and rate-limits at roughly 100 req/min. The `retries: 2` in `playwright.config.ts` absorbs transient network hiccups in CI without hiding genuine failures.
+
+---
+
+## 4 · Fixture Architecture
+
+The fixture layer is split into four files connected by chained `test.extend()` calls. Each file owns one responsibility; `index.ts` re-exports the final composed `test` and the `AppFixtures` type.
+
+| File | Fixtures |
+|---|---|
+| `pages.ts` | `loginPage`, `inventoryPage`, `cartPage`, `checkoutPage` |
+| `api.ts` | `apiClient`, `postsApi`, `healthApi`, `mockApi` (route stub + auto-teardown) |
+| `auth.ts` | `workflows` (auth/cart/checkout) · `authenticatedInventory` (navigate to inventory, session already active) |
+| `auto.ts` | `_serverLinks` (auto) · `_failureCapture` (auto, screenshot + video + trace on failure) |
+
+**Why fixtures over `beforeEach`?**  
+Fixtures are composable, type-safe, and automatically torn down. They allow fine-grained dependency injection — a test that only needs `postsApi` pays zero cost for page objects it never touches.
+
+### Storage-state login
+
+All UI tests share a single authenticated session via Playwright's `storageState` mechanism:
+
+1. A dedicated `setup` project runs `tests/auth.setup.ts` **once** before any UI test.
+2. The setup logs in as `standard_user` and writes `page.context().storageState()` to `.auth/user.json`.
+3. The `chromium` project declares `dependencies: ['setup']` and `storageState: '.auth/user.json'`.
+4. `authenticatedInventory` simply navigates to `/inventory.html` — the session is already active.
+
+This reduces login round-trips from O(n tests) to O(1 per run, shared across workers).
+
+---
+
+## 5 · Reporting & Triage
 
 If a test fails in CI at 3am, the on-call engineer opens the GitHub Actions run and downloads two artifacts: `playwright-report` and `test-results`.
 
-`playwright-report` is the HTML report — one click shows every test, its duration, and a screenshot of the failing state. `test-results` contains Playwright traces (`.zip` files) that can be opened with `npx playwright show-trace trace.zip`. A trace is a full timeline of every network request, DOM mutation, and user action, with a screenshot at each step. It is the diff between "I know the test failed" and "I know *why* it failed."
+`playwright-report` is the HTML report — one click shows every test, its duration, and a screenshot of the failing state. `test-results` contains Playwright traces (`.zip` files) that can be opened with `npx playwright show-trace trace.zip`. A trace is a full timeline of every network request, DOM mutation, and user action, with a screenshot at each step — the difference between *"I know the test failed"* and *"I know why it failed."*
 
-For a 3am incident: open report → find failing test → open trace → find the first divergence from expected state → correlate with network tab in trace → open bug with exact reproduction steps.
+> **3am triage flow:** open report → find failing test → open trace → find the first divergence from expected state → correlate with network tab → open bug with exact reproduction steps.
 
-## What I would build next
+The **Allure 3 report** is deployed to GitHub Pages after every push to `main`. History trend is preserved across runs via `actions/cache` — the `history/` folder is restored before generation and saved after, so trend graphs accumulate over time without requiring a token or an external artifact action.
 
-The first thing I would add is a **storage-state fixture for authenticated tests**. Right now every test in the `authenticatedInventory` fixture performs a real login via HTTP. With `page.context().storageState()` I can log in once, serialise the session to disk, and reuse it across all tests in a worker — cutting login time from O(n tests) to O(1 per worker). This is the highest-leverage optimisation for a growing suite.
+The **Grafana dashboard** surfaces test run metrics in real time. Stat panels use `last_over_time(...[3h])` to survive Prometheus staleness — without it, panels reset to 0 five minutes after each run completes.
 
-After that: **contract testing** (Pact) between the UI layer and the API. Right now I assert API responses with `toMatchObject` — that is a consumer-side check. Pact publishes the consumer contract to a broker so the API team gets a build failure if they break the schema, before any UI test is even run.
+### CI/CD pipeline — parallel job structure
 
-## AI tools used
+The pipeline is split into five jobs to maximise concurrency and apply least-privilege permissions per job:
 
-This framework was architected and written with Claude (Anthropic). Claude was used for: initial file scaffolding, fixture composition patterns, and reviewing the final structure for consistency. All design decisions — selector strategy, isolation model, retry policy, fixture vs. beforeEach trade-offs — were made by the author and are documented above.
+| Job | Depends on | Parallel with | Permissions |
+|---|---|---|---|
+| **typecheck** | — | `test` | `contents: read` |
+| **test** | — | `typecheck` | `contents: read` |
+| **report** | `test` | `summary` | `contents: read` |
+| **summary** | `test` | `report` | `contents: read` |
+| **deploy-pages** | `report` | — | `contents: read` · `pages: write` · `id-token: write` |
+
+`typecheck` and `test` start simultaneously on every push. The moment `test` finishes (pass or fail), `report` and `summary` launch in parallel — Allure generation and step-summary writing no longer block each other. Java is installed only in `report`, keeping the `test` runner lean. The `pages: write` and `id-token: write` tokens are held exclusively by `deploy-pages` — no other job in the workflow can trigger a Pages deployment.
+
+---
+
+## 6 · Clean Code & SOLID Compliance
+
+### SOLID principles
+
+| Principle | How it is applied |
+|---|---|
+| **S — Single Responsibility** | Every class owns exactly one concern. `ApiService` (base HTTP delegation) lives in its own `ApiService.ts`; `PostsApi` and `HealthApi` only define endpoint methods. `BasePage` holds navigation helpers only. Each fixture file (`pages`, `api`, `auth`, `auto`) owns one fixture group. |
+| **O — Open/Closed** | `ApiService` is abstract — new API surfaces (`PostsApi`, `HealthApi`) extend it without modifying it. The fixture chain (`pages → api → auth → auto`) extends each layer without touching prior files. |
+| **L — Liskov Substitution** | `PostsApi` and `HealthApi` are substitutable for `ApiService` anywhere the base is expected. All page objects are substitutable for `BasePage`. No overrides break the base contract. |
+| **I — Interface Segregation** | `RequestOptions` is fully optional — callers set only what they need. `CustomerInfo`, `Post`, `CreatePostPayload`, `UpdatePostPayload` are minimal focused interfaces. No fat interfaces exist. |
+| **D — Dependency Inversion** | `ApiClient` receives its `baseUrl` and `timeout` via constructor injection, not by reading config directly inside methods. Page objects depend on the `Page` abstraction from Playwright, not on concrete browser implementations. |
+
+### Clean code decisions
+
+| Issue | Fix applied |
+|---|---|
+| `ApiService` defined in `PostsApi.ts` | Extracted to `ApiService.ts`; `HealthApi` no longer imports its base from an unrelated file |
+| Magic numbers `3` (retries) and `200` (backoff ms) | Named constants `DEFAULT_RETRIES` and `RETRY_BACKOFF_MS` in `ApiClient.ts` |
+| `as never` casts on `page.route()` / `page.unroute()` | Introduced `RouteHandler` type alias (`(route, request) => Promise<void>`); casts eliminated |
+| `'chromium'` hardcoded string in `_failureCapture` | Replaced with `UI_PROJECTS = new Set(['chromium', 'firefox', 'webkit'])` — OCP-compliant, new projects need no fixture edit |
+| `'video/webm' as never` | Removed; `allureAttachment` accepts the MIME string directly |
+
+---
+
+## 7 · What I Would Build Next
+
+| Initiative | Impact | How |
+|---|---|---|
+| **Contract testing (Pact)** | API team gets a build failure before any UI test runs | Consumer-driven contracts published to Pact Broker; CI fails if the provider breaks the schema |
+| **Visual regression** | Catches unintended UI changes invisible to functional tests | Playwright's `toHaveScreenshot()` with baseline images stored in the repo |
+| **Flaky test quarantine** | Stops intermittents from blocking merges without hiding them | Tag flaky tests `@quarantine`, run in a separate job, report to a tracking board |
+| **Parallel sharding** | Linear CI time reduction as the suite grows | `--shard=1/N` across N runners; Allure merges all result shards |
+
+---
+
+## 7 · AI Tools Used
+
+This framework was architected and iteratively improved with **Claude (Anthropic)**. Claude was used for initial scaffolding, fixture composition patterns, CI/CD pipeline design, Grafana dashboard query fixes, and structural refactoring. All design decisions — selector strategy, isolation model, retry policy, fixture split — were made by the author and are documented above.
