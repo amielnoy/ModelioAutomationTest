@@ -7,9 +7,10 @@ import {
   allureSeverity,
   allureStep,
 } from '../../src/utils/allure';
+import { Products } from '../constants';
 
-const PRODUCT_A = 'Sauce Labs Backpack';
-const PRODUCT_B = 'Sauce Labs Bike Light';
+const PRODUCT_A = Products.BACKPACK;
+const PRODUCT_B = Products.BIKE_LIGHT;
 
 test.describe('Cart', () => {
   test(

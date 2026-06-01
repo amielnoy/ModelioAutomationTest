@@ -7,6 +7,7 @@ import {
   allureSeverity,
   allureStep,
 } from '../../src/utils/allure';
+import { InvalidCredentials, LoginMessages } from '../constants';
 
 /**
  * Login tests — Part 1, scenarios 1 & 2.
@@ -54,7 +55,7 @@ test.describe('Login', () => {
       await allureSeverity('critical');
 
       await allureStep('Attempt login with wrong password', async () => {
-        await loginPage.login('standard_user', 'wrong_password');
+        await loginPage.login(InvalidCredentials.username, InvalidCredentials.password);
       });
 
       await allureStep('Verify exact error message is displayed', async () => {
@@ -63,9 +64,7 @@ test.describe('Login', () => {
          * We assert the EXACT string the app shows. If Swag Labs ever changes the copy,
          * this test breaks visibly — which is the desired behaviour.
          */
-        await loginPage.expectErrorContaining(
-          'Epic sadface: Username and password do not match any user in this service',
-        );
+        await loginPage.expectErrorContaining(LoginMessages.INVALID_CREDENTIALS);
       });
 
       await allureStep('Verify user remains on login page', async () => {

@@ -9,6 +9,7 @@ import {
   allureStep,
   allureAttachment,
 } from '../../src/utils/allure';
+import { PostFixtures } from '../constants';
 import { APIResponse } from '@playwright/test';
 
 async function attachRequestResponse(
@@ -74,18 +75,18 @@ test.describe('GET /posts/{id}', () => {
     let response!: APIResponse;
     let body!: Post;
 
-    await allureStep('Send GET /posts/1', async () => {
-      const result = await postsApi.getByIdAs(1);
+    await allureStep(`Send GET /posts/${PostFixtures.VALID_ID}`, async () => {
+      const result = await postsApi.getByIdAs(PostFixtures.VALID_ID);
       response = result.response;
       body = result.body;
-      await attachRequestResponse('GET', '/posts/1', null, response);
+      await attachRequestResponse('GET', `/posts/${PostFixtures.VALID_ID}`, null, response);
     });
 
     await allureStep('Assert status 200 and correct body', async () => {
       expect(response.status()).toBe(ApiConstants.OK);
       expect(body).toMatchObject({
         userId: expect.any(Number),
-        id: 1,
+        id: PostFixtures.VALID_ID,
         title: expect.any(String),
         body: expect.any(String),
       });
@@ -100,9 +101,9 @@ test.describe('GET /posts/{id}', () => {
 
     let response!: APIResponse;
 
-    await allureStep('Send GET /posts/99999', async () => {
-      response = await postsApi.getById(99999);
-      await attachRequestResponse('GET', '/posts/99999', null, response);
+    await allureStep(`Send GET /posts/${PostFixtures.NONEXISTENT_ID}`, async () => {
+      response = await postsApi.getById(PostFixtures.NONEXISTENT_ID);
+      await attachRequestResponse('GET', `/posts/${PostFixtures.NONEXISTENT_ID}`, null, response);
     });
 
     await allureStep('Assert status 404', async () => {
@@ -118,11 +119,7 @@ test.describe('POST /posts', () => {
     await allureStory('Create post');
     await allureSeverity('critical');
 
-    const payload = {
-      userId: 1,
-      title: 'Test post title',
-      body: 'Test post body content',
-    };
+    const payload = PostFixtures.CREATE_PAYLOAD;
 
     let response!: APIResponse;
     let body!: Post;
@@ -156,25 +153,21 @@ test.describe('PUT /posts/{id} and DELETE /posts/{id}', () => {
     await allureStory('Update post');
     await allureSeverity('critical');
 
-    const updated = {
-      userId: 1,
-      title: 'Updated title',
-      body: 'Updated body content',
-    };
+    const updated = PostFixtures.UPDATE_PAYLOAD;
 
     let response!: APIResponse;
     let body!: Record<string, unknown>;
 
-    await allureStep('Send PUT /posts/1 with updated payload', async () => {
-      response = await postsApi.update(1, updated);
+    await allureStep(`Send PUT /posts/${PostFixtures.VALID_ID} with updated payload`, async () => {
+      response = await postsApi.update(PostFixtures.VALID_ID, updated);
       body = await response.json();
-      await attachRequestResponse('PUT', '/posts/1', updated, response);
+      await attachRequestResponse('PUT', `/posts/${PostFixtures.VALID_ID}`, updated, response);
     });
 
     await allureStep('Assert status 200 and updated fields in response', async () => {
       expect(response.status()).toBe(ApiConstants.OK);
       expect(body).toMatchObject({
-        id: 1,
+        id: PostFixtures.VALID_ID,
         title: updated.title,
         body: updated.body,
       });
@@ -189,9 +182,9 @@ test.describe('PUT /posts/{id} and DELETE /posts/{id}', () => {
 
     let response!: APIResponse;
 
-    await allureStep('Send DELETE /posts/1', async () => {
-      response = await postsApi.remove(1);
-      await attachRequestResponse('DELETE', '/posts/1', null, response);
+    await allureStep(`Send DELETE /posts/${PostFixtures.VALID_ID}`, async () => {
+      response = await postsApi.remove(PostFixtures.VALID_ID);
+      await attachRequestResponse('DELETE', `/posts/${PostFixtures.VALID_ID}`, null, response);
     });
 
     await allureStep('Assert status 200 or 204 with empty body', async () => {

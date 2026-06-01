@@ -7,8 +7,9 @@ import {
   allureSeverity,
   allureStep,
 } from '../../src/utils/allure';
+import { Products, SortOptions, CustomerInfo } from '../constants';
 
-const PRODUCT = 'Sauce Labs Backpack';
+const PRODUCT = Products.BACKPACK;
 
 test.describe('Checkout', () => {
   test(
@@ -40,11 +41,7 @@ test.describe('Checkout', () => {
       });
 
       await allureStep('Fill in customer information (first name, last name, postal code)', async () => {
-        await checkout.fillCustomerInfo({
-          firstName: 'Test',
-          lastName: 'User',
-          postalCode: '12345',
-        });
+        await checkout.fillCustomerInfo(CustomerInfo);
       });
 
       await allureStep('Continue to Step 2 — verify order overview is displayed', async () => {
@@ -71,7 +68,7 @@ test.describe('Product sorting (bonus)', () => {
       const inventory = authenticatedInventory;
 
       await allureStep('Apply "Price (low to high)" sort option', async () => {
-        await inventory.sortBy('lohi');
+        await inventory.sortBy(SortOptions.PRICE_LOW_TO_HIGH);
       });
 
       await allureStep('Verify all displayed prices are in ascending order', async () => {
@@ -95,7 +92,7 @@ test.describe('Product sorting (bonus)', () => {
       const inventory = authenticatedInventory;
 
       await allureStep('Apply "Price (high to low)" sort option', async () => {
-        await inventory.sortBy('hilo');
+        await inventory.sortBy(SortOptions.PRICE_HIGH_TO_LOW);
       });
 
       await allureStep('Verify all displayed prices are in descending order', async () => {
