@@ -7,11 +7,12 @@ import {
   allureSeverity,
   allureStep,
 } from '../../src/utils/allure';
-import { Products, SortOptions, CustomerInfo } from '../constants';
+import { Products, SortOptions, CustomerInfo, JiraLinks } from '../constants';
+import { allureRequirement, allueBug } from '../../src/utils/allure';
 
 const PRODUCT = Products.BACKPACK;
 
-test.describe('Checkout', () => {
+test.describe('Checkout', { tag: '@ui' }, () => {
   test(
     'end-to-end checkout — add product → info → overview → order confirmed',
     async ({ authenticatedInventory, page }) => {
@@ -19,6 +20,8 @@ test.describe('Checkout', () => {
       await allureFeature('Checkout');
       await allureStory('End-to-end purchase flow');
       await allureSeverity('blocker');
+      await allureRequirement(JiraLinks.requirements.CHECKOUT, 'PROJ-103 — Checkout requirement');
+      await allueBug(JiraLinks.bugs.CHECKOUT_FLOW, 'BUG-13 — Checkout flow');
 
       const inventory = authenticatedInventory;
       const cart      = new CartPage(page);
@@ -56,7 +59,7 @@ test.describe('Checkout', () => {
   );
 });
 
-test.describe('Product sorting (bonus)', () => {
+test.describe('Product sorting (bonus)', { tag: '@ui' }, () => {
   test(
     'sort price low-to-high — prices are in ascending order',
     async ({ authenticatedInventory }) => {
@@ -64,6 +67,7 @@ test.describe('Product sorting (bonus)', () => {
       await allureFeature('Inventory');
       await allureStory('Product sorting');
       await allureSeverity('normal');
+      await allureRequirement(JiraLinks.requirements.CHECKOUT, 'PROJ-103 — Checkout requirement');
 
       const inventory = authenticatedInventory;
 

@@ -7,12 +7,13 @@ import {
   allureSeverity,
   allureStep,
 } from '../../src/utils/allure';
-import { Products } from '../constants';
+import { Products, JiraLinks } from '../constants';
+import { allureRequirement, allueBug } from '../../src/utils/allure';
 
 const PRODUCT_A = Products.BACKPACK;
 const PRODUCT_B = Products.BIKE_LIGHT;
 
-test.describe('Cart', () => {
+test.describe('Cart', { tag: '@ui' }, () => {
   test(
     'add 2 distinct products — cart badge count and cart contents are correct',
     async ({ authenticatedInventory, page }) => {
@@ -20,6 +21,8 @@ test.describe('Cart', () => {
       await allureFeature('Cart');
       await allureStory('Add multiple products');
       await allureSeverity('critical');
+      await allureRequirement(JiraLinks.requirements.CART, 'PROJ-102 — Cart requirement');
+      await allueBug(JiraLinks.bugs.CART_BADGE, 'BUG-12 — Cart badge counter');
 
       const inventory = authenticatedInventory;
       const cart = new CartPage(page);
@@ -64,6 +67,8 @@ test.describe('Cart', () => {
       await allureFeature('Cart');
       await allureStory('Badge counter updates');
       await allureSeverity('normal');
+      await allureRequirement(JiraLinks.requirements.CART, 'PROJ-102 — Cart requirement');
+      await allueBug(JiraLinks.bugs.CART_BADGE, 'BUG-12 — Cart badge counter');
 
       const inventory = authenticatedInventory;
 

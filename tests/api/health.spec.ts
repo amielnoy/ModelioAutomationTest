@@ -8,14 +8,19 @@ import {
   allureSeverity,
   allureStep,
   allureAttachment,
+  allureRequirement,
+  allueBug,
 } from '../../src/utils/allure';
+import { JiraLinks } from '../constants';
 
-test.describe('Health API — /health', () => {
+test.describe('Health API — /health', { tag: '@health-check' }, () => {
   test('GET /health/self — service is up', async ({ healthApi }) => {
     await allureEpic('Health');
     await allureFeature('Self');
     await allureStory('Service liveness');
     await allureSeverity('blocker');
+    await allureRequirement(JiraLinks.requirements.HEALTH, 'PROJ-105 — Health API requirement');
+    await allueBug(JiraLinks.bugs.HEALTH_DOWN, 'BUG-15 — Service health down');
 
     let response: Awaited<ReturnType<typeof healthApi.self>>;
 
@@ -38,6 +43,7 @@ test.describe('Health API — /health', () => {
     await allureFeature('Aggregated');
     await allureStory('System health');
     await allureSeverity('critical');
+    await allureRequirement(JiraLinks.requirements.HEALTH, 'PROJ-105 — Health API requirement');
 
     let body: SystemHealth;
 
@@ -68,6 +74,7 @@ test.describe('Health API — /health', () => {
     await allureFeature('UI');
     await allureStory('Web UI reachability');
     await allureSeverity('critical');
+    await allureRequirement(JiraLinks.requirements.HEALTH, 'PROJ-105 — Health API requirement');
 
     let body: ServiceHealth;
 
@@ -90,6 +97,7 @@ test.describe('Health API — /health', () => {
     await allureFeature('API');
     await allureStory('REST API reachability');
     await allureSeverity('critical');
+    await allureRequirement(JiraLinks.requirements.HEALTH, 'PROJ-105 — Health API requirement');
 
     let body: ServiceHealth;
 
@@ -108,12 +116,13 @@ test.describe('Health API — /health', () => {
   });
 });
 
-test.describe('Health API — Swagger / OpenAPI', () => {
+test.describe('Health API — Swagger / OpenAPI', { tag: '@health-check' }, () => {
   test('GET /openapi.json — spec is valid and lists all health endpoints', async ({ healthApi }) => {
     await allureEpic('Health');
     await allureFeature('Swagger');
     await allureStory('OpenAPI spec');
     await allureSeverity('normal');
+    await allureRequirement(JiraLinks.requirements.HEALTH, 'PROJ-105 — Health API requirement');
 
     let spec: Record<string, unknown>;
 

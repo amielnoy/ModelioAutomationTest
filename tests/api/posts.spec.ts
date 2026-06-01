@@ -9,7 +9,8 @@ import {
   allureStep,
   allureAttachment,
 } from '../../src/utils/allure';
-import { PostFixtures } from '../constants';
+import { PostFixtures, JiraLinks } from '../constants';
+import { allureRequirement, allueBug } from '../../src/utils/allure';
 import { APIResponse } from '@playwright/test';
 
 async function attachRequestResponse(
@@ -33,12 +34,14 @@ async function attachRequestResponse(
   }
 }
 
-test.describe('GET /posts', () => {
+test.describe('GET /posts', { tag: '@api' }, () => {
   test('returns 200 with a non-empty JSON array matching Post schema', async ({ postsApi }) => {
     await allureEpic('API');
     await allureFeature('Posts');
     await allureStory('GET all posts');
     await allureSeverity('critical');
+    await allureRequirement(JiraLinks.requirements.POSTS, 'PROJ-104 — Posts API requirement');
+    await allueBug(JiraLinks.bugs.POSTS_DELETE, 'BUG-14 — Posts DELETE response');
 
     let response!: APIResponse;
 
@@ -65,12 +68,13 @@ test.describe('GET /posts', () => {
   });
 });
 
-test.describe('GET /posts/{id}', () => {
+test.describe('GET /posts/{id}', { tag: '@api' }, () => {
   test('returns 200 and correct body for a valid id', async ({ postsApi }) => {
     await allureEpic('API');
     await allureFeature('Posts');
     await allureStory('GET single post');
     await allureSeverity('critical');
+    await allureRequirement(JiraLinks.requirements.POSTS, 'PROJ-104 — Posts API requirement');
 
     let response!: APIResponse;
     let body!: Post;
@@ -98,6 +102,7 @@ test.describe('GET /posts/{id}', () => {
     await allureFeature('Posts');
     await allureStory('GET non-existent post');
     await allureSeverity('normal');
+    await allureRequirement(JiraLinks.requirements.POSTS, 'PROJ-104 — Posts API requirement');
 
     let response!: APIResponse;
 
@@ -112,12 +117,13 @@ test.describe('GET /posts/{id}', () => {
   });
 });
 
-test.describe('POST /posts', () => {
+test.describe('POST /posts', { tag: '@api' }, () => {
   test('returns 201 Created, echoes payload, and includes a generated id', async ({ postsApi }) => {
     await allureEpic('API');
     await allureFeature('Posts');
     await allureStory('Create post');
     await allureSeverity('critical');
+    await allureRequirement(JiraLinks.requirements.POSTS, 'PROJ-104 — Posts API requirement');
 
     const payload = PostFixtures.CREATE_PAYLOAD;
 
@@ -146,12 +152,13 @@ test.describe('POST /posts', () => {
   });
 });
 
-test.describe('PUT /posts/{id} and DELETE /posts/{id}', () => {
+test.describe('PUT /posts/{id} and DELETE /posts/{id}', { tag: '@api' }, () => {
   test('PUT returns 200 with the updated body reflected in response', async ({ postsApi }) => {
     await allureEpic('API');
     await allureFeature('Posts');
     await allureStory('Update post');
     await allureSeverity('critical');
+    await allureRequirement(JiraLinks.requirements.POSTS, 'PROJ-104 — Posts API requirement');
 
     const updated = PostFixtures.UPDATE_PAYLOAD;
 
@@ -179,6 +186,8 @@ test.describe('PUT /posts/{id} and DELETE /posts/{id}', () => {
     await allureFeature('Posts');
     await allureStory('Delete post');
     await allureSeverity('normal');
+    await allureRequirement(JiraLinks.requirements.POSTS, 'PROJ-104 — Posts API requirement');
+    await allueBug(JiraLinks.bugs.POSTS_DELETE, 'BUG-14 — Posts DELETE response');
 
     let response!: APIResponse;
 

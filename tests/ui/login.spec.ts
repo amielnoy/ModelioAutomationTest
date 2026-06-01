@@ -7,7 +7,8 @@ import {
   allureSeverity,
   allureStep,
 } from '../../src/utils/allure';
-import { InvalidCredentials, LoginMessages } from '../constants';
+import { InvalidCredentials, LoginMessages, JiraLinks } from '../constants';
+import { allureRequirement, allueBug } from '../../src/utils/allure';
 
 /**
  * Login tests — Part 1, scenarios 1 & 2.
@@ -19,7 +20,7 @@ import { InvalidCredentials, LoginMessages } from '../constants';
  * – Selectors: data-test attributes only (getByTestId).
  */
 
-test.describe('Login', () => {
+test.describe('Login', { tag: '@ui' }, () => {
   test.beforeEach(async ({ loginPage }) => {
     await loginPage.navigate();
   });
@@ -31,6 +32,8 @@ test.describe('Login', () => {
       await allureFeature('Login');
       await allureStory('Happy path login');
       await allureSeverity('blocker');
+      await allureRequirement(JiraLinks.requirements.LOGIN, 'PROJ-101 — Login requirement');
+      await allueBug(JiraLinks.bugs.LOGIN_BANNER, 'BUG-11 — Welcome banner missing');
 
       await allureStep('Log in as standard_user', async () => {
         await loginPage.login(
@@ -53,6 +56,7 @@ test.describe('Login', () => {
       await allureFeature('Login');
       await allureStory('Invalid credentials');
       await allureSeverity('critical');
+      await allureRequirement(JiraLinks.requirements.LOGIN, 'PROJ-101 — Login requirement');
 
       await allureStep('Attempt login with wrong password', async () => {
         await loginPage.login(InvalidCredentials.username, InvalidCredentials.password);
@@ -73,13 +77,15 @@ test.describe('Login', () => {
     },
   );
 
-  test(
+  test.fail(
     '[INTENTIONAL FAIL] dashboard shows welcome banner after login',
     async ({ page, loginPage, inventoryPage }) => {
       await allureEpic('Authentication');
       await allureFeature('Login');
       await allureStory('Welcome banner');
       await allureSeverity('minor');
+      await allureRequirement(JiraLinks.requirements.LOGIN, 'PROJ-101 — Login requirement');
+      await allueBug(JiraLinks.bugs.LOGIN_BANNER, 'BUG-11 — Welcome banner missing');
 
       await allureStep('Log in as standard_user', async () => {
         await loginPage.login(
