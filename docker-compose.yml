@@ -1,0 +1,20 @@
+services:
+  tests:
+    build: .
+    environment:
+      CI: "true"
+      WEB_BASE_URL:       ${WEB_BASE_URL:-https://www.saucedemo.com}
+      STANDARD_USER:      ${STANDARD_USER:-standard_user}
+      STANDARD_PASSWORD:  ${STANDARD_PASSWORD:-secret_sauce}
+      LOCKED_USER:        ${LOCKED_USER:-locked_out_user}
+      API_BASE_URL:       ${API_BASE_URL:-https://jsonplaceholder.typicode.com}
+      BROWSER:            ${BROWSER:-chromium}
+      WORKERS:            ${WORKERS:-4}
+      DEFAULT_TIMEOUT:    ${DEFAULT_TIMEOUT:-30000}
+      NAVIGATION_TIMEOUT: ${NAVIGATION_TIMEOUT:-30000}
+    volumes:
+      - ./allure-results:/app/allure-results
+      - ./allure-report:/app/allure-report
+      - ./playwright-report:/app/playwright-report
+      - ./test-results:/app/test-results
+      - ./logs:/app/logs
