@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+# Keep allure-results/history/ if you want trend graphs — add it back explicitly
+*.local.*
+.DS_Store
