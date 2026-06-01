@@ -32,8 +32,10 @@ export default defineConfig({
         // Run `npm run report:allure:ci` (or `npm run report:allure` locally)
         // after the test run to compile them into the static HTML report.
         resultsDir: 'allure-results',
-        // Attach Playwright traces, screenshots, and videos to Allure results.
-        detail: true,
+        // Step detail comes from our allureStep() wrappers; setting detail:false
+        // prevents allure-playwright from attaching the trace as an interactive
+        // viewer that fetches the zip cross-origin (fails on GitHub Pages CORS).
+        detail: false,
         // Suites are mapped from test.describe labels.
         suiteTitle: true,
         // Environment metadata shown on the Allure report overview page.
