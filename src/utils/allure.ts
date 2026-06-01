@@ -36,12 +36,12 @@ export const allureFeature = (name: string) => feature(name);
 /** Tag a test to a user story. */
 export const allureStory = (name: string) => story(name);
 
-/** Attach arbitrary text content to the Allure result (e.g. API response body). */
+/** Attach text or binary content to the Allure result. */
 export const allureAttachment = (
   name: string,
-  content: string,
-  type: 'text/plain' | 'application/json' | 'text/html' = 'text/plain',
-) => attachment(name, content, { contentType: type });
+  content: string | Buffer,
+  type: string = 'text/plain',
+) => attachment(name, content as string, { contentType: type });
 
 /**
  * Unified step wrapper: Playwright test.step (trace) + Allure step (report) + logger.

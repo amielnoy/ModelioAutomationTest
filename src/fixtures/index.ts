@@ -1,10 +1,13 @@
 import { test as base, expect } from '@playwright/test';
+import * as fs from 'fs';
 import { LoginPage, InventoryPage, CartPage, CheckoutPage } from '../pages';
 import { AuthWorkflow } from '../workflows/AuthWorkflow';
 import { CartWorkflow } from '../workflows/CartWorkflow';
 import { CheckoutWorkflow } from '../workflows/CheckoutWorkflow';
 import { ApiClient, PostsApi } from '../api';
 import { config } from '../utils/config';
+import { allureAttachment } from '../utils/allure';
+import { logger } from '../utils/logger';
 import { APIRequestContext, Route } from '@playwright/test';
 
 /**
@@ -17,6 +20,10 @@ import { APIRequestContext, Route } from '@playwright/test';
  * – The `authenticatedPage` fixture handles login once per test so individual
  *   tests stay focused on their scenario, not on setup ceremony.
  */
+
+type AutoFixtures = {
+  _failureCapture: void;
+};
 
 type Pages = {
   loginPage: LoginPage;
@@ -50,7 +57,7 @@ type WorkflowFixtures = {
   };
 };
 
-export type AppFixtures = Pages & ApiFixtures & AuthFixtures & WorkflowFixtures;
+export type AppFixtures = Pages & ApiFixtures & AuthFixtures & WorkflowFixtures & AutoFixtures;
 
 export const test = base.extend<AppFixtures>({
   // ── Page objects ────────────────────────────────────────────────────────
@@ -127,6 +134,46 @@ export const test = base.extend<AppFixtures>({
     );
     await use(inventoryPage);
   },
+
+  // ── Failure capture (auto) ───────────────────────────────────────────────
+  // Runs after every test. On failure: screenshot → Allure + log;
+  // video/trace paths read from Playwright's retain-on-failure attachments.
+  _failureCapture: [async ({ page }, use, testInfo) => {
+    await use(undefined as unknown as void);
+
+    if (testInfo.status === testInfo.expectedStatus) return;
+
+    const title = testInfo.title;
+    logger.fail(`Test "${title}"`, testInfo.errors[0]?.message);
+
+    // Screenshot — page is still open at fixture teardown
+    try {
+      const screenshot = await page.screenshot({ fullPage: true });
+      await testInfo.attach('failure-screenshot', { body: screenshot, contentType: 'image/png' });
+      await allureAttachment('Last screenshot', screenshot, 'image/png');
+      logger.info(`  Screenshot captured`);
+    } catch {
+      logger.warn(`  Screenshot unavailable (page already closed)`);
+    }
+
+    // Video — Playwright writes the file on context close; path is set before that
+    try {
+      const videoPath = await page.video()?.path();
+      if (videoPath && fs.existsSync(videoPath)) {
+        await allureAttachment('Failure video', fs.readFileSync(videoPath), 'video/webm' as any);
+        logger.info(`  Video: ${videoPath}`);
+      }
+    } catch {
+      logger.warn(`  Video unavailable`);
+    }
+
+    // Trace — populated by Playwright's retain-on-failure into testInfo.attachments
+    const traceAttachment = testInfo.attachments.find(a => a.name === 'trace');
+    if (traceAttachment?.path && fs.existsSync(traceAttachment.path)) {
+      await allureAttachment('Trace', fs.readFileSync(traceAttachment.path), 'application/zip');
+      logger.info(`  Trace: ${traceAttachment.path}`);
+    }
+  }, { auto: true }],
 });
 
 export { expect };
