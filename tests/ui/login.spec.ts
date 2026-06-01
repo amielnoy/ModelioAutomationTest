@@ -73,4 +73,27 @@ test.describe('Login', () => {
       });
     },
   );
+
+  test(
+    '[INTENTIONAL FAIL] dashboard shows welcome banner after login',
+    async ({ page, loginPage, inventoryPage }) => {
+      await allureEpic('Authentication');
+      await allureFeature('Login');
+      await allureStory('Welcome banner');
+      await allureSeverity('minor');
+
+      await allureStep('Log in as standard_user', async () => {
+        await loginPage.login(
+          config.web.credentials.standard.username,
+          config.web.credentials.standard.password,
+        );
+      });
+
+      await allureStep('Verify welcome banner is visible', async () => {
+        await inventoryPage.expectOnInventoryPage();
+        // SauceDemo has no welcome banner — this assertion is intentionally wrong
+        await expect(page.getByTestId('welcome-banner')).toBeVisible({ timeout: 3000 });
+      });
+    },
+  );
 });
