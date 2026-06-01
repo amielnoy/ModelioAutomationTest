@@ -34,6 +34,15 @@ open_servers() {
 
   echo "▶ Opening servers in Chrome tabs..."
 
+  # Kill any existing http-server on port 5050 before starting a new one
+  local old_pid
+  old_pid=$(lsof -ti tcp:5050 2>/dev/null || true)
+  if [ -n "$old_pid" ]; then
+    echo "  Stopping existing server on port 5050 (PID $old_pid)..."
+    kill "$old_pid" 2>/dev/null || true
+    sleep 1
+  fi
+
   # Serve Allure report on a temporary port so it's reachable in the browser
   if command -v npx &>/dev/null && [ -d allure-report ]; then
     npx --yes http-server allure-report -p 5050 -s &
