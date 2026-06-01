@@ -9,3 +9,4 @@ allure-report/
 *.local.*
 .DS_Store
 logs/
+health_api/__pycache__/
