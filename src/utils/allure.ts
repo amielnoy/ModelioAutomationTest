@@ -72,3 +72,11 @@ export const allureLabel = (name: string, value: string) => label(name, value);
 /** Link a test to an external URL (e.g. Jira ticket, test case management). */
 export const allureLink = (url: string, name?: string, type?: string) =>
   link(url, name, type);
+
+/** Link a test to a Jira requirement / user story (Allure TMS link type). */
+export const allureRequirement = (url: string, name?: string) =>
+  link(url, name ?? url, 'tms');
+
+/** Link a test to a Jira bug / issue (Allure issue link type). */
+export const allueBug = (url: string, name?: string) =>
+  link(url, name ?? url, 'issue');
