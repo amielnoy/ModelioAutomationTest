@@ -159,33 +159,37 @@ export const test = base.extend<AppFixtures>({
   // ── Failure capture (auto) ───────────────────────────────────────────────
   // Runs after every test. On failure: screenshot → Allure + log;
   // video/trace paths read from Playwright's retain-on-failure attachments.
+  // Screenshot and video are skipped for API/health projects (no real browser).
   _failureCapture: [async ({ page }, use, testInfo) => {
     await use(undefined as unknown as void);
 
     if (testInfo.status === testInfo.expectedStatus) return;
 
     const title = testInfo.title;
+    const isUiTest = testInfo.project?.name === 'chromium';
     logger.fail(`Test "${title}"`, testInfo.errors[0]?.message);
 
-    // Screenshot — page is still open at fixture teardown
-    try {
-      const screenshot = await page.screenshot({ fullPage: true });
-      await testInfo.attach('failure-screenshot', { body: screenshot, contentType: 'image/png' });
-      await allureAttachment('Last screenshot', screenshot, 'image/png');
-      logger.info(`  Screenshot captured`);
-    } catch {
-      logger.warn(`  Screenshot unavailable (page already closed)`);
-    }
-
-    // Video — Playwright writes the file on context close; path is set before that
-    try {
-      const videoPath = await page.video()?.path();
-      if (videoPath && fs.existsSync(videoPath)) {
-        await allureAttachment('Failure video', fs.readFileSync(videoPath), 'video/webm' as never);
-        logger.info(`  Video: ${videoPath}`);
+    if (isUiTest) {
+      // Screenshot — page is still open at fixture teardown
+      try {
+        const screenshot = await page.screenshot({ fullPage: true });
+        await testInfo.attach('failure-screenshot', { body: screenshot, contentType: 'image/png' });
+        await allureAttachment('Last screenshot', screenshot, 'image/png');
+        logger.info(`  Screenshot captured`);
+      } catch {
+        logger.warn(`  Screenshot unavailable (page already closed)`);
       }
-    } catch {
-      logger.warn(`  Video unavailable`);
+
+      // Video — Playwright writes the file on context close; path is set before that
+      try {
+        const videoPath = await page.video()?.path();
+        if (videoPath && fs.existsSync(videoPath)) {
+          await allureAttachment('Failure video', fs.readFileSync(videoPath), 'video/webm' as never);
+          logger.info(`  Video: ${videoPath}`);
+        }
+      } catch {
+        logger.warn(`  Video unavailable`);
+      }
     }
 
     // Trace — populated by Playwright's retain-on-failure into testInfo.attachments

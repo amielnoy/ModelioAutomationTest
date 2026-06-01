@@ -8,10 +8,6 @@ import {
   allureStep,
 } from '../../src/utils/allure';
 
-/**
- * Checkout tests — Part 1, scenario 4 + bonus product sorting.
- */
-
 const PRODUCT = 'Sauce Labs Backpack';
 
 test.describe('Checkout', () => {
@@ -27,71 +23,88 @@ test.describe('Checkout', () => {
       const cart      = new CartPage(page);
       const checkout  = new CheckoutPage(page);
 
-      // Add one product to cart.
-      await inventory.addToCart(PRODUCT);
-      await inventory.expectCartBadge(1);
-      await inventory.goToCart();
-
-      // Verify cart contents before proceeding.
-      await cart.expectOnCartPage();
-      await cart.expectItemPresent(PRODUCT);
-
-      // Step 1: proceed to checkout.
-      await cart.proceedToCheckout();
-      await checkout.expectOnStepOne();
-
-      // Fill in customer information.
-      await checkout.fillCustomerInfo({
-        firstName: 'Test',
-        lastName: 'User',
-        postalCode: '12345',
+      await allureStep(`Add "${PRODUCT}" to cart and verify badge shows 1`, async () => {
+        await inventory.addToCart(PRODUCT);
+        await inventory.expectCartBadge(1);
       });
 
-      // Step 2: verify overview page.
-      await checkout.expectOnStepTwo();
+      await allureStep('Navigate to cart and confirm product is listed', async () => {
+        await inventory.goToCart();
+        await cart.expectOnCartPage();
+        await cart.expectItemPresent(PRODUCT);
+      });
 
-      // Finish the order.
-      await checkout.finish();
+      await allureStep('Proceed to checkout — verify Step 1 (customer info) is shown', async () => {
+        await cart.proceedToCheckout();
+        await checkout.expectOnStepOne();
+      });
 
-      // Assert completion confirmation.
-      await checkout.expectOrderComplete();
+      await allureStep('Fill in customer information (first name, last name, postal code)', async () => {
+        await checkout.fillCustomerInfo({
+          firstName: 'Test',
+          lastName: 'User',
+          postalCode: '12345',
+        });
+      });
+
+      await allureStep('Continue to Step 2 — verify order overview is displayed', async () => {
+        await checkout.expectOnStepTwo();
+      });
+
+      await allureStep('Finish order and confirm success message is shown', async () => {
+        await checkout.finish();
+        await checkout.expectOrderComplete();
+      });
     },
   );
 });
-
-// ── Bonus: product sorting ─────────────────────────────────────────────────
 
 test.describe('Product sorting (bonus)', () => {
   test(
     'sort price low-to-high — prices are in ascending order',
     async ({ authenticatedInventory }) => {
+      await allureEpic('Shopping');
+      await allureFeature('Inventory');
+      await allureStory('Product sorting');
+      await allureSeverity('normal');
+
       const inventory = authenticatedInventory;
 
-      await inventory.sortBy('lohi');
+      await allureStep('Apply "Price (low to high)" sort option', async () => {
+        await inventory.sortBy('lohi');
+      });
 
-      const prices = await inventory.getProductPrices();
-      expect(prices.length).toBeGreaterThan(0);
-
-      // Verify each price is ≤ the next.
-      for (let i = 0; i < prices.length - 1; i++) {
-        expect(prices[i]).toBeLessThanOrEqual(prices[i + 1]);
-      }
+      await allureStep('Verify all displayed prices are in ascending order', async () => {
+        const prices = await inventory.getProductPrices();
+        expect(prices.length).toBeGreaterThan(0);
+        for (let i = 0; i < prices.length - 1; i++) {
+          expect(prices[i]).toBeLessThanOrEqual(prices[i + 1]);
+        }
+      });
     },
   );
 
   test(
     'sort price high-to-low — prices are in descending order',
     async ({ authenticatedInventory }) => {
+      await allureEpic('Shopping');
+      await allureFeature('Inventory');
+      await allureStory('Product sorting');
+      await allureSeverity('normal');
+
       const inventory = authenticatedInventory;
 
-      await inventory.sortBy('hilo');
+      await allureStep('Apply "Price (high to low)" sort option', async () => {
+        await inventory.sortBy('hilo');
+      });
 
-      const prices = await inventory.getProductPrices();
-      expect(prices.length).toBeGreaterThan(0);
-
-      for (let i = 0; i < prices.length - 1; i++) {
-        expect(prices[i]).toBeGreaterThanOrEqual(prices[i + 1]);
-      }
+      await allureStep('Verify all displayed prices are in descending order', async () => {
+        const prices = await inventory.getProductPrices();
+        expect(prices.length).toBeGreaterThan(0);
+        for (let i = 0; i < prices.length - 1; i++) {
+          expect(prices[i]).toBeGreaterThanOrEqual(prices[i + 1]);
+        }
+      });
     },
   );
 });
