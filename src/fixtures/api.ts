@@ -1,7 +1,9 @@
-import { Route } from '@playwright/test';
+import { Route, Request } from '@playwright/test';
 import { test as pagesTest } from './pages';
 import { ApiClient, PostsApi, HealthApi } from '../api';
 import { config } from '../utils/config';
+
+type RouteHandler = (route: Route, request: Request) => Promise<void>;
 
 export type ApiFixtures = {
   apiClient: ApiClient;
@@ -31,23 +33,23 @@ export const test = pagesTest.extend<ApiFixtures>({
   },
 
   mockApi: async ({ page }, use) => {
-    const routes: Array<{ pattern: string | RegExp; handler: (route: Route) => Promise<void> }> = [];
+    const routes: Array<{ pattern: string | RegExp; handler: RouteHandler }> = [];
 
     const routeFn = async (urlPattern: string | RegExp, status: number, body: unknown) => {
-      const handler = async (route: Route) => {
+      const handler: RouteHandler = async (route) => {
         await route.fulfill({ status, body: JSON.stringify(body), headers: { 'Content-Type': 'application/json' } });
       };
       routes.push({ pattern: urlPattern, handler });
-      await page.route(urlPattern as never, handler);
+      await page.route(urlPattern, handler);
       return async () => {
-        await page.unroute(urlPattern as never, handler);
+        await page.unroute(urlPattern, handler);
       };
     };
 
     await use({ route: routeFn });
 
     for (const r of routes) {
-      await page.unroute(r.pattern as never, r.handler);
+      await page.unroute(r.pattern, r.handler);
     }
   },
 });

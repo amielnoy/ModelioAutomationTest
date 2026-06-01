@@ -3,7 +3,6 @@ import { InventoryPage } from '../pages';
 import { AuthWorkflow } from '../workflows/AuthWorkflow';
 import { CartWorkflow } from '../workflows/CartWorkflow';
 import { CheckoutWorkflow } from '../workflows/CheckoutWorkflow';
-import { config } from '../utils/config';
 
 export type WorkflowFixtures = {
   workflows: {
@@ -25,11 +24,10 @@ export const test = apiTest.extend<WorkflowFixtures & AuthFixtures>({
     await use({ auth, cart, checkout });
   },
 
-  authenticatedInventory: async ({ workflows }, use) => {
-    const inventoryPage = await workflows.auth.login(
-      config.web.credentials.standard.username,
-      config.web.credentials.standard.password,
-    );
-    await use(inventoryPage);
+  // storageState is applied at the project level (playwright.config.ts → chromium project).
+  // The session is already active — navigate directly to inventory without re-logging in.
+  authenticatedInventory: async ({ page }, use) => {
+    await page.goto('/inventory.html');
+    await use(new InventoryPage(page));
   },
 });

@@ -4,6 +4,8 @@ import { allureAttachment, allureLink } from '../utils/allure';
 import { logger } from '../utils/logger';
 import { config } from '../utils/config';
 
+const UI_PROJECTS = new Set(['chromium', 'firefox', 'webkit']);
+
 export type AutoFixtures = {
   _failureCapture: void;
   _serverLinks: void;
@@ -26,7 +28,7 @@ export const test = authTest.extend<AutoFixtures>({
     if (testInfo.status === testInfo.expectedStatus) return;
 
     const title = testInfo.title;
-    const isUiTest = testInfo.project?.name === 'chromium';
+    const isUiTest = UI_PROJECTS.has(testInfo.project?.name ?? '');
     logger.fail(`Test "${title}"`, testInfo.errors[0]?.message);
 
     if (isUiTest) {
@@ -42,7 +44,7 @@ export const test = authTest.extend<AutoFixtures>({
       try {
         const videoPath = await page.video()?.path();
         if (videoPath && fs.existsSync(videoPath)) {
-          await allureAttachment('Failure video', fs.readFileSync(videoPath), 'video/webm' as never);
+          await allureAttachment('Failure video', fs.readFileSync(videoPath), 'video/webm');
           logger.info(`  Video: ${videoPath}`);
         }
       } catch {
