@@ -187,6 +187,7 @@ jobs:
           | 📦 Playwright Report (artifact) | [Download from this run]($RUN_URL) |
           | 🧪 Swagger UI (Health API) | [$SWAGGER_URL]($SWAGGER_URL) |
           | ⚡ FastAPI (Health API) | [$FASTAPI_URL]($FASTAPI_URL) |
+          | 📈 Grafana | [http://localhost:3000](http://localhost:3000) |
           EOF
 
       # ── Upload Playwright HTML report ─────────────────────────────────────
