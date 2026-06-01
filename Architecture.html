@@ -376,7 +376,7 @@
     <div class="flow-item">
       <div class="fi-label">auth.ts</div>
       <div class="fi-title">Auth fixtures</div>
-      <div class="fi-desc"><code>workflows</code> (auth/cart/checkout) + <code>authenticatedInventory</code> — logs in, returns <code>InventoryPage</code></div>
+      <div class="fi-desc"><code>authenticatedInventory</code> — navigates to <code>/inventory.html</code>; session already active via storageState; URL guard detects silent auth failures</div>
     </div>
     <div class="flow-item auto-fix">
       <div class="fi-label">auto fixture · auto.ts</div>
@@ -639,7 +639,7 @@
   <ul>
     <li><code>pages.ts</code> — page object fixtures (loginPage, inventoryPage, cartPage, checkoutPage)</li>
     <li><code>api.ts</code> — apiClient, postsApi, healthApi, mockApi (route stub + auto-teardown)</li>
-    <li><code>auth.ts</code> — workflows fixture + <code>authenticatedInventory</code> (full login per test)</li>
+    <li><code>auth.ts</code> — <code>authenticatedInventory</code>: navigates to <code>/inventory.html</code>, URL guard detects silent auth failures, returns <code>InventoryPage</code></li>
     <li><code>auto.ts</code> — <code>_serverLinks</code> and <code>_failureCapture</code> auto-fixtures (screenshot, video, trace)</li>
   </ul>
 
@@ -656,7 +656,7 @@
   <div class="cards" style="margin-top:0.5rem">
     <div class="card">
       <div class="card-title">allure.ts</div>
-      <div class="card-desc">Wraps allure-js-commons. <code>allureStep()</code> chains Playwright's <code>test.step()</code>, Allure's step, and the logger in one call.</div>
+      <div class="card-desc">Wraps allure-js-commons. <code>allureStep()</code> chains Playwright's <code>test.step()</code>, Allure's step, and the logger in one call. <code>allureRequirement()</code> links to TMS tickets (type <code>tms</code>); <code>allureBug()</code> links to issue tracker tickets (type <code>issue</code>).</div>
     </div>
     <div class="card">
       <div class="card-title">config.ts</div>
@@ -956,13 +956,18 @@ push to main
       <tr><td><code>.nojekyll</code> in allure-report</td><td>Jekyll (default GitHub Pages processor) silently drops files/dirs whose names start with <code>_</code>, causing Allure 3 test-case fetches to 404.</td></tr>
       <tr><td>Custom <code>SummaryReporter</code></td><td><code>globalTeardown</code> stdout is swallowed by Playwright's subprocess model; a custom reporter's <code>onEnd</code> runs in the main process.</td></tr>
       <tr><td>Localhost links skipped in CI</td><td>Grafana/FastAPI/Swagger run only via Docker locally; embedding <code>localhost</code> URLs in the GitHub Pages Allure report would always 404.</td></tr>
-      <tr><td><code>fullyParallel: true</code> + 4 workers</td><td>All 18 tests complete in ~5 s locally and in CI; no shared browser state between tests.</td></tr>
+      <tr><td><code>fullyParallel: true</code> + 4 workers</td><td>All 30 tests complete in ~8 s locally and in CI; no shared browser state between tests.</td></tr>
       <tr><td>Allure history via <code>actions/cache</code></td><td>Replaces <code>dawidd6/action-download-artifact</code> (needed a token, failed silently). Cache restore/save uses key prefix <code>allure-history-</code> — always finds the most recent entry across runs, no auth required.</td></tr>
       <tr><td><code>FORCE_JAVASCRIPT_ACTIONS_TO_NODE24</code></td><td>Workflow-level env var opts all GitHub Actions into the Node 24 runtime now, silencing deprecation warnings before the forced migration in September 2026.</td></tr>
       <tr><td>Fixture layer split into four files</td><td><code>pages.ts → api.ts → auth.ts → auto.ts</code> via chained <code>test.extend()</code>. Each file owns one responsibility; inter-fixture dependencies resolve because Playwright sees all fixtures in the composed type.</td></tr>
-      <tr><td><code>last_over_time(...[3h])</code> in Grafana stat panels</td><td>Bare gauge queries return 0 after ~5 min of Prometheus staleness. Wrapping in <code>last_over_time</code> looks back across the full dashboard window so stat panels show the most recent test run's numbers.</td></tr>
+      <tr><td><code>max_over_time(...[3h])</code> in Grafana stat panels</td><td>FastAPI explicitly resets gauge metrics to 0 after each test run. <code>last_over_time</code> would return 0 (the most recent real value). <code>max_over_time</code> returns the peak value within the 3-hour window — the actual test run counts — so panels remain meaningful hours after a run completes.</td></tr>
       <tr><td><code>tests/constants.ts</code></td><td>Centralises all inline test data (product names, sort keys, credentials, payloads, IDs). A single change here propagates to every spec that references the constant.</td></tr>
       <tr><td>5-job parallel CI pipeline</td><td><code>typecheck</code> and <code>test</code> run simultaneously — no tsc gate before tests. <code>report</code> and <code>summary</code> fan out in parallel the moment <code>test</code> completes; Java is installed only in <code>report</code>, keeping <code>test</code> lean. <code>pages: write</code> and <code>id-token: write</code> are scoped exclusively to <code>deploy-pages</code> — the minimum surface needed for a Pages deployment.</td></tr>
+      <tr><td>Playwright test tags (<code>@ui</code>, <code>@api</code>, <code>@health-check</code>)</td><td>Every <code>test.describe</code> block carries a tag so any slice can be run in isolation: <code>npx playwright test --grep "@api"</code>. Tags also appear in Allure metadata, making filtered dashboards possible without touching test code.</td></tr>
+      <tr><td><code>allureRequirement</code> + <code>allureBug</code> on every test</td><td>Allure link types <code>tms</code> and <code>issue</code> connect each test to its requirement ticket and any known bug. Reviewers clicking a test result in the Allure report jump directly to Jira context without searching. Both are thin wrappers over <code>allure-js-commons</code> <code>link()</code> to keep the call site clean.</td></tr>
+      <tr><td>Data-driven params from <code>tests/data/*.params.json</code></td><td>Login and posts scenarios live in JSON files with an <code>expectedResult</code> field. The spec loops with <code>for...of</code> — one Playwright test per JSON entry, no plugin needed. Adding a new scenario is a single JSON object; no spec edit required. <code>expectedResult: "success"/"error"</code> lets one spec body cover both happy-path and error-path assertions without branching in test setup.</td></tr>
+      <tr><td>URL guard in <code>auth.ts</code> <code>authenticatedInventory</code></td><td><code>page.waitForURL(/inventory/)</code> runs immediately after navigating to <code>/inventory.html</code>. Without it, a broken storageState silently redirects to the login page and all subsequent locator assertions produce misleading errors (element not found rather than auth failure).</td></tr>
+      <tr><td><code>retries: 0</code> locally, <code>retries: 2</code> in CI</td><td>Local retries mask flaky tests during development — a test that passes on the second attempt locally still lands in CI as flaky. Setting local retries to 0 forces authors to fix root causes before pushing.</td></tr>
     </tbody>
   </table>
 
