@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+health_api/__pycache__/
+health_api/*.egg-info/
+**/__pycache__/
+**/*.pyc
+
+# Test output — large, binary-heavy, regenerated each run
+allure-results/
+allure-report/
+allure-report-prev/
+allure-history/
+playwright-report/
+test-results/
+logs/
+
+# Binary / non-text assets
+*.docx
+*.zip
+*.png
+*.jpg
+*.jpeg
+*.webm
+*.mp4
+*.pdf
+
+# Lock files — rarely useful for code understanding
+package-lock.json
+
+# Generated HTML (large, not source)
+Architecture.html
+
+# IDE / OS noise
+.DS_Store
+.qodo/
+**/.idea/
+**/.vscode/
