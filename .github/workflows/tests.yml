@@ -56,20 +56,33 @@ jobs:
       - name: Install Playwright browsers + system deps
         run: npx playwright install --with-deps chromium
 
-      # ── Tests: UI (chromium only in CI for speed) ─────────────────────────
-      - name: Run UI tests (chromium, 4 workers)
-        run: npx playwright test --project=chromium tests/ui --workers=4
+      # ── Tests: all projects in parallel ──────────────────────────────────
+      - name: Run all tests (chromium + api, 4 workers, fully parallel)
+        run: npx playwright test --workers=4
         continue-on-error: true
-        id: ui-tests
+        id: all-tests
 
-      # ── Tests: API ────────────────────────────────────────────────────────
-      - name: Run API tests
-        run: npx playwright test --project=api tests/api --workers=4
-        id: api-tests
+      # ── Restore Allure history from previous run ──────────────────────────
+      - name: Download previous Allure report (for history)
+        if: always()
+        uses: dawidd6/action-download-artifact@v6
+        continue-on-error: true
+        with:
+          name: allure-report
+          path: allure-report-prev/
+          if_no_artifact_found: ignore
+
+      - name: Copy Allure history into results
+        if: always()
+        run: |
+          if [ -d allure-report-prev/history ]; then
+            cp -r allure-report-prev/history allure-results/
+            echo "History restored"
+          else
+            echo "No previous history"
+          fi
 
       # ── Generate Allure 3 HTML report from raw results ───────────────────
-      # allure-playwright writes JSON to allure-results/ during the test run.
-      # allure-commandline (bundled in devDeps) compiles them into a static site.
       - name: Generate Allure report
         if: always()
         run: npm run report:allure:ci
@@ -113,16 +126,12 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
-      # ── Fail the job if any test step failed ─────────────────────────────
+      # ── Fail the job if tests failed ─────────────────────────────────────
       - name: Check test outcomes
         if: always()
         run: |
-          if [ "${{ steps.ui-tests.outcome }}" = "failure" ]; then
-            echo "❌ UI tests failed"
-            exit 1
-          fi
-          if [ "${{ steps.api-tests.outcome }}" = "failure" ]; then
-            echo "❌ API tests failed"
+          if [ "${{ steps.all-tests.outcome }}" = "failure" ]; then
+            echo "❌ Tests failed"
             exit 1
           fi
           echo "✅ All tests passed"
