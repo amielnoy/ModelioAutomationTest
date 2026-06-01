@@ -9,6 +9,7 @@ set -euo pipefail
 # ./run.sh clean        — remove all test output directories
 
 CMD=${1:-all}
+TEST_EXIT_CODE=0
 
 build() {
   echo "▶ Building Docker image..."
@@ -17,7 +18,7 @@ build() {
 
 run_tests() {
   echo "▶ Running tests: $*"
-  docker compose run --rm tests "$@"
+  docker compose run --rm tests "$@" || TEST_EXIT_CODE=$?
 }
 
 generate_report() {
@@ -61,16 +62,19 @@ case "$CMD" in
     run_tests npx playwright test --workers=4
     generate_report
     open_servers
+    exit $TEST_EXIT_CODE
     ;;
   ui)
     build
     run_tests npx playwright test --project=chromium tests/ui --workers=4
     generate_report
+    exit $TEST_EXIT_CODE
     ;;
   api)
     build
     run_tests npx playwright test --project=api tests/api --workers=4
     generate_report
+    exit $TEST_EXIT_CODE
     ;;
   report)
     npm run report:allure
