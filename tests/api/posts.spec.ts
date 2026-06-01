@@ -38,7 +38,7 @@ test.describe('GET /posts', () => {
     expect(body.length).toBeGreaterThan(0);
 
     // Sample the first item for schema compliance.
-    expect(body[0]).toMatchObject<Partial<Post>>({
+    expect(body[0]).toMatchObject({
       userId: expect.any(Number),
       id: expect.any(Number),
       title: expect.any(String),
@@ -52,7 +52,7 @@ test.describe('GET /posts/{id}', () => {
     const { response, body } = await postsApi.getByIdAs(1);
 
     expect(response.status()).toBe(ApiConstants.OK);
-    expect(body).toMatchObject<Partial<Post>>({
+    expect(body).toMatchObject({
       userId: expect.any(Number),
       id: 1,
       title: expect.any(String),

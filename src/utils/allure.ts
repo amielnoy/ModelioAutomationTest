@@ -51,7 +51,7 @@ export const allureAttachment = (
  *   });
  */
 export const allureStep = <T>(name: string, fn: () => Promise<T>): Promise<T> =>
-  step(name, fn);
+  Promise.resolve(step(name, fn));
 
 /** Add a free-text description to the test result. */
 export const allureDescription = (text: string) => description(text);
