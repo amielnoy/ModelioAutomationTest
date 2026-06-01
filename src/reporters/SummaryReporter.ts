@@ -6,6 +6,7 @@ import type {
 } from '@playwright/test/reporter';
 import * as fs from 'fs';
 import * as path from 'path';
+import { c } from '../utils/colors';
 
 function formatDuration(ms: number): string {
   return ms < 60_000
@@ -14,71 +15,65 @@ function formatDuration(ms: number): string {
 }
 
 export default class SummaryReporter implements Reporter {
-  private passed  = 0;
-  private failed  = 0;
-  private skipped = 0;
-  private flaky   = 0;
   private startMs = 0;
 
   onBegin(_config: FullConfig, _suite: Suite): void {
     this.startMs = Date.now();
   }
 
-  onEnd(result: FullResult): void {
+  onEnd(_result: FullResult): void {
     const duration = formatDuration(Date.now() - this.startMs);
 
-    // FullResult carries aggregate counts in Playwright ≥ 1.40
-    const passed  = (result as never as Record<string, number>)['passed']  ?? this.passed;
-    const failed  = (result as never as Record<string, number>)['failed']  ?? this.failed;
-    const skipped = (result as never as Record<string, number>)['skipped'] ?? this.skipped;
-    const flaky   = (result as never as Record<string, number>)['flaky']   ?? this.flaky;
-
-    // Fallback: read from results.json written by the json reporter
-    let p = passed, f = failed, s = skipped, fl = flaky;
+    // Read authoritative counts from the json reporter output
+    let p = 0, f = 0, s = 0, fl = 0;
     try {
       const json = JSON.parse(fs.readFileSync(path.resolve('test-results/results.json'), 'utf8'));
       const st = json.stats;
       if (st) { p = st.expected; f = st.unexpected; s = st.skipped; fl = st.flaky; }
-    } catch { /* json reporter may not have flushed yet; use FullResult */ }
+    } catch { /* reporter may not have flushed; leave zeroes */ }
 
     const total = p + f + s;
-    const icon  = f > 0 ? '✗' : fl > 0 ? '~' : '✓';
-    const label = f > 0 ? 'FAILED' : fl > 0 ? 'FLAKY' : 'PASSED';
 
-    const rows: [string, string][] = [
-      ['Total',    String(total)],
-      ['Passed',   String(p)],
-      ['Failed',   String(f)],
-      ['Skipped',  String(s)],
-      ['Flaky',    String(fl)],
-      ['Duration', duration],
+    const statusColor = f > 0 ? c.red : fl > 0 ? c.yellow : c.green;
+    const icon        = f > 0 ? '✗' : fl > 0 ? '~' : '✓';
+    const label       = f > 0 ? 'FAILED' : fl > 0 ? 'FLAKY' : 'PASSED';
+
+    const rows: [string, string, ((s: string) => string)?][] = [
+      ['Total',    String(total),    c.white],
+      ['Passed',   String(p),        p > 0 ? c.green : c.gray],
+      ['Failed',   String(f),        f > 0 ? c.red   : c.gray],
+      ['Skipped',  String(s),        s > 0 ? c.yellow: c.gray],
+      ['Flaky',    String(fl),       fl > 0 ? c.yellow: c.gray],
+      ['Duration', duration,         c.cyan],
     ];
 
     const colW = Math.max(...rows.map(([k]) => k.length)) + 2;
     const valW = Math.max(...rows.map(([, v]) => v.length)) + 2;
-    const line = '─'.repeat(colW + valW + 3);
+    const border = c.dim('─'.repeat(colW + valW + 3));
 
-    process.stdout.write(`\n${line}\n`);
-    process.stdout.write(`  Test results  ${icon} ${label}\n`);
-    process.stdout.write(`${line}\n`);
-    for (const [key, val] of rows) {
-      process.stdout.write(`  ${key.padEnd(colW)}${val.padStart(valW)}\n`);
+    const out = (s: string) => process.stdout.write(s);
+
+    out(`\n${border}\n`);
+    out(`  ${c.bold('Test results')}  ${statusColor(c.bold(`${icon} ${label}`))}\n`);
+    out(`${border}\n`);
+    for (const [key, val, color] of rows) {
+      const padded = val.padStart(valW);
+      out(`  ${c.gray(key.padEnd(colW))}${color ? color(padded) : padded}\n`);
     }
-    process.stdout.write(`${line}\n\n`);
+    out(`${border}\n\n`);
 
-    // Append counts to Allure environment.properties so they appear on the Overview page
+    // Append plain counts to Allure environment.properties
     const envFile = path.resolve('allure-results/environment.properties');
     if (fs.existsSync(path.resolve('allure-results'))) {
       try {
-        const props = [
+        fs.appendFileSync(envFile, [
           `tests_total=${total}`,
           `tests_passed=${p}`,
           `tests_failed=${f}`,
           `tests_skipped=${s}`,
           `tests_flaky=${fl}`,
           `tests_duration=${duration}`,
-        ].join('\n') + '\n';
-        fs.appendFileSync(envFile, props, 'utf8');
+        ].join('\n') + '\n', 'utf8');
       } catch { /* non-fatal */ }
     }
   }
