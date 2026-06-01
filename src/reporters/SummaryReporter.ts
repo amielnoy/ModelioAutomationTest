@@ -62,6 +62,17 @@ export default class SummaryReporter implements Reporter {
     }
     out(`${border}\n\n`);
 
+    // Push counts to health API (fire-and-forget)
+    const apiUrl = process.env['HEALTH_API_URL'];
+    if (apiUrl) {
+      const durationSeconds = (Date.now() - this.startMs) / 1000;
+      fetch(`${apiUrl}/metrics/test-results`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ total, passed: p, failed: f, skipped: s, flaky: fl, duration_seconds: durationSeconds }),
+      }).catch(() => { /* non-fatal */ });
+    }
+
     // Append plain counts to Allure environment.properties
     const envFile = path.resolve('allure-results/environment.properties');
     if (fs.existsSync(path.resolve('allure-results'))) {

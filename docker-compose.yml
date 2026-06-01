@@ -6,8 +6,10 @@ services:
     ports:
       - "8000:8000"
     environment:
-      WEB_BASE_URL:  ${WEB_BASE_URL:-https://www.saucedemo.com}
-      API_BASE_URL:  ${API_BASE_URL:-https://jsonplaceholder.typicode.com}
+      WEB_BASE_URL:    ${WEB_BASE_URL:-https://www.saucedemo.com}
+      API_BASE_URL:    ${API_BASE_URL:-https://jsonplaceholder.typicode.com}
+      PROMETHEUS_URL:  http://prometheus:9090/-/healthy
+      GRAFANA_URL:     http://grafana:3000/api/health
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/self')"]
       interval: 10s
