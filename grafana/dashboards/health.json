@@ -836,13 +836,13 @@
       },
       "targets": [
         {
-          "expr": "process_start_time_seconds{job=\"health-api\"}",
+          "expr": "time() - process_start_time_seconds{job=\"health-api\"}",
           "legendFormat": "uptime"
         }
       ],
       "fieldConfig": {
         "defaults": {
-          "unit": "dateTimeFromNow",
+          "unit": "s",
           "color": {
             "mode": "fixed",
             "fixedColor": "blue"
