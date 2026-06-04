@@ -301,17 +301,21 @@ jobs:
 
       - name: Write server links to step summary
         run: |
+          BASE_URL="https://amielnoy.github.io/Ai-typescript-playwright-Parrallel-githubActionsAutomationTests"
           RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          ALLURE_URL="https://amielnoy.github.io/Ai-typescript-playwright-Parrallel-githubActionsAutomationTests/allure-report/"
 
           cat >> "$GITHUB_STEP_SUMMARY" <<EOF
 
           ## 🔗 Server Links
 
-          | Server | URL |
-          |---|---|
-          | 📊 Allure Report (GitHub Pages) | [$ALLURE_URL]($ALLURE_URL) |
-          | 📦 Playwright Report (artifact) | [Download from this run]($RUN_URL) |
+          | Server | URL | Notes |
+          |---|---|---|
+          | 📊 Allure Report | [$BASE_URL/allure-report/]($BASE_URL/allure-report/) | GitHub Pages |
+          | 🏗️ Architecture | [$BASE_URL/Architecture.html]($BASE_URL/Architecture.html) | GitHub Pages |
+          | 📦 Playwright Report | [Download from this run]($RUN_URL) | CI artifact |
+          | ⚡ FastAPI | http://localhost:8000 | Run \`docker-compose up\` |
+          | 📝 Swagger UI | http://localhost:8000/docs | Run \`docker-compose up\` |
+          | 📈 Grafana | http://localhost:3000 | Run \`docker-compose up\` |
           EOF
 
   # ── Job 5: Deploy to GitHub Pages — needs report ────────────────────────
